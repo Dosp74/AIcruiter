@@ -25,7 +25,7 @@ namespace AIcruiter
             // 모달창 생성
             Form modalForm = new Form();
             modalForm.Text = "면접 질문";
-            modalForm.Size = new System.Drawing.Size(400, 300);
+            modalForm.Size = new System.Drawing.Size(500, 350); // 크기 늘림
             modalForm.StartPosition = FormStartPosition.CenterParent;
 
             // 질문을 보여줄 라벨
@@ -33,13 +33,13 @@ namespace AIcruiter
             questionLabel.Text = question;
             questionLabel.AutoSize = true;
             questionLabel.Location = new System.Drawing.Point(20, 20);
-            questionLabel.MaximumSize = new System.Drawing.Size(350, 0); // 줄바꿈 설정
+            questionLabel.MaximumSize = new System.Drawing.Size(450, 0); // 줄바꿈 설정
             modalForm.Controls.Add(questionLabel);
 
             // 텍스트박스 (사용자 답변 입력)
             TextBox answerBox = new TextBox();
             answerBox.Multiline = true;
-            answerBox.Size = new System.Drawing.Size(350, 100);
+            answerBox.Size = new System.Drawing.Size(450, 100);
             answerBox.Location = new System.Drawing.Point(20, 80);
             modalForm.Controls.Add(answerBox);
 
@@ -47,6 +47,8 @@ namespace AIcruiter
             Button saveButton = new Button();
             saveButton.Text = "저장하기";
             saveButton.Location = new System.Drawing.Point(20, 200);
+            saveButton.Size = new System.Drawing.Size(80, 30);
+
             saveButton.Click += (s, ev) =>
             {
                 string userAnswer = answerBox.Text;
@@ -72,6 +74,21 @@ namespace AIcruiter
                 }
             };
             modalForm.Controls.Add(saveButton);
+
+            // 채점 버튼 추가
+            Button gradeButton = new Button();
+            gradeButton.Text = "채점";
+            gradeButton.Location = new System.Drawing.Point(120, 200);
+            gradeButton.Size = new System.Drawing.Size(80, 30);
+
+            gradeButton.Click += (s, ev) =>
+            {
+                // 점수를 100으로 고정하여 표시(추후 변경)
+                int score = 100;
+
+                MessageBox.Show($"점수: {score} / 100", "채점 결과");
+            };
+            modalForm.Controls.Add(gradeButton);
 
             // 모달창 띄우기
             modalForm.ShowDialog();

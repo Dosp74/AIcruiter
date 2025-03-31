@@ -38,7 +38,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("나눔고딕", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label1.Location = new System.Drawing.Point(207, 90);
+            this.label1.Location = new System.Drawing.Point(213, 103);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(385, 46);
             this.label1.TabIndex = 0;
