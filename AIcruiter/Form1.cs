@@ -8,19 +8,45 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing.Configuration;
 
 namespace AIcruiter
 {
     public partial class Form1 : Form
     {
+        public class Question
+        {
+            //(인덱스, 질문, 정답)으로 구성
+            public int idx;
+            public string question;
+            public string answer;
+
+            public Question(int idx, string question, string answer)
+            {
+                this.idx = idx;
+                this.question = question;
+                this.answer = answer;
+            }
+        }
+
+        //.txt파일의 데이터를 불러올 리스트 생성
+        List<Question> questions = new List<Question>();
+
+        //Random 객체 생성
+        Random rand = new Random();
+        int rNumber = 0;
+
         public Form1()
         {
             InitializeComponent();
         }
         private void btn1_random_Click(object sender, EventArgs e)
         {
+            //0 ~ Count-1 중 난수 생성
+            rNumber = rand.Next(questions.Count);
+
             // 질문 내용 (하나만 하드코딩으로 설정//추후 txt파일로 대체)
-            string question = "랜덤질문 생성";
+            string question = questions[rNumber].question;
 
             // 모달창 생성
             Form modalForm = new Form();
@@ -110,6 +136,32 @@ namespace AIcruiter
             }
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //.txt파일 위치는 \temp\bin\Debug 폴더
+            string path = "DataStructure.txt";
 
+            //줄 단위로 하여 질문을 리스트에 추가
+            string[] content = File.ReadAllLines(path);
+            foreach (string line in content)
+            {
+                string[] columns = line.Split('/');
+
+                Question tQuestion = new Question(int.Parse(columns[0]), columns[1], columns[2]);
+                questions.Add(tQuestion);
+            }
+
+            //바탕색 기본색으로 변경(MDI설정으로 인해 회색으로 설정되어 있음)
+            this.Controls[this.Controls.Count - 1].BackColor = SystemColors.Control;
+        }
+
+        //정답확인 버튼 추가
+        private void btnAnswer_Click(object sender, EventArgs e)
+        {
+            //Answer 폼 생성
+            Answer answer = new Answer(questions);
+            answer.Owner = this;
+            answer.Show();
+        }
     }
 }
