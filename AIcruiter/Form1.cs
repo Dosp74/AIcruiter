@@ -47,6 +47,11 @@ namespace AIcruiter
 
             // 질문 내용 (하나만 하드코딩으로 설정//추후 txt파일로 대체)
             string question = questions[rNumber].question;
+            int questionIdx = questions[rNumber].idx;
+
+            // 저장 경로 설정
+            string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DataStructureAnswer");
+            string answerPath = Path.Combine(folderPath, $"DataStructureAnswer{questionIdx}.txt");
 
             // 모달창 생성
             Form modalForm = new Form();
@@ -69,6 +74,24 @@ namespace AIcruiter
             answerBox.Location = new System.Drawing.Point(20, 80);
             modalForm.Controls.Add(answerBox);
 
+            if (File.Exists(answerPath))
+            {
+                Button btnShowPrevious = new Button
+                {
+                    Text = "이전 답변 보기",
+                    Location = new Point(110, 200),
+                    Size = new Size(120, 30)
+                };
+
+                btnShowPrevious.Click += (s, ev) =>
+                {
+                    string previousAnswer = File.ReadAllText(answerPath);
+                    MessageBox.Show(previousAnswer, "이전 답변");
+                };
+
+                modalForm.Controls.Add(btnShowPrevious);
+            }
+
             // 저장 버튼
             Button saveButton = new Button();
             saveButton.Text = "저장하기";
@@ -77,34 +100,56 @@ namespace AIcruiter
 
             saveButton.Click += (s, ev) =>
             {
-                string userAnswer = answerBox.Text;
+                string userAnswer = answerBox.Text.Trim();
 
-                if (!string.IsNullOrWhiteSpace(userAnswer))
+                if (string.IsNullOrWhiteSpace(userAnswer))
                 {
-                    try
+                    MessageBox.Show("답변을 입력해주세요.", "입력 필요");
+                    return;
+                }
+
+                // 폴더가 없으면 생성
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+
+                // 덮어쓰기 확인
+                if (File.Exists(answerPath))
+                {
+                    DialogResult result = MessageBox.Show(
+                        "이 질문에 대한 기존 답변이 존재합니다.\n새 답변으로 덮어쓰시겠습니까?",
+                        "답변 덮어쓰기 확인",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning
+                    );
+
+                    if (result == DialogResult.No)
                     {
-                        // 질문과 답변을 함께 저장
-                        string content = $"질문: {question}\n답변: {userAnswer}\n\n";
-                        File.AppendAllText("user_input_one.txt", content); // 파일에 추가로 저장
-                        MessageBox.Show("질문과 답변이 저장되었습니다.", "저장 완료");
-                        modalForm.Close();
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("파일 저장 오류: " + ex.Message, "오류");
+                        return; // 저장 안 함
                     }
                 }
-                else
+
+                // 답변 저장
+                try
                 {
-                    MessageBox.Show("답변을 입력해주세요.", "오류");
+                    string content = $"질문: {question}\r\n\r\n답변: {userAnswer}";
+
+                    File.WriteAllText(answerPath, content);
+                    MessageBox.Show("답변이 저장되었습니다.", "저장 완료");
+
+                    modalForm.Close();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("파일 저장 오류: " + ex.Message, "오류");
                 }
             };
+
             modalForm.Controls.Add(saveButton);
 
             // 채점 버튼 추가
             Button gradeButton = new Button();
             gradeButton.Text = "채점";
-            gradeButton.Location = new System.Drawing.Point(120, 200);
+            gradeButton.Location = new System.Drawing.Point(390, 200);
             gradeButton.Size = new System.Drawing.Size(80, 30);
 
             gradeButton.Click += (s, ev) =>
@@ -122,18 +167,91 @@ namespace AIcruiter
 
         private void btn2_load_Click(object sender, EventArgs e)
         {
-            // 파일 경로 지정
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "user_input_one.txt");
+            Form selectionForm = new Form();
+            selectionForm.Text = "답변 선택";
+            selectionForm.Size = new Size(400, 300);
+            selectionForm.StartPosition = FormStartPosition.CenterParent;
 
-            if (File.Exists(filePath))
+            ListBox listBox = new ListBox();
+            listBox.Size = new Size(360, 180);
+            listBox.Location = new Point(10, 10);
+
+            // 질문 인덱스 매핑용 리스트
+            List<int> validIndexes = new List<int>();
+
+            foreach (var q in questions)
             {
-                string loadedText = File.ReadAllText(filePath);
-                MessageBox.Show(loadedText, "저장된 질문 및 답변");
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DataStructureAnswer", $"DataStructureAnswer{q.idx}.txt");
+
+                if (File.Exists(filePath))
+                {
+                    listBox.Items.Add($"{q.idx}. {q.question}");
+                    validIndexes.Add(q.idx); // .txt 파일이 존재하는 질문의 인덱스만 저장
+                }
             }
-            else
+
+            Button btnOpen = new Button()
             {
-                MessageBox.Show("저장된 파일이 없습니다.", "오류");
-            }
+                Text = "보기",
+                Location = new Point(290, 200),
+                Size = new Size(80, 30)
+            };
+
+            btnOpen.Click += (s, ev) =>
+            {
+                if (listBox.SelectedIndex >= 0)
+                {
+                    int selectedIdx = validIndexes[listBox.SelectedIndex];
+                    string answerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DataStructureAnswer", $"DataStructureAnswer{selectedIdx}.txt");
+
+                    if (!File.Exists(answerPath))
+                    {
+                        MessageBox.Show("답변을 찾을 수 없습니다.", "오류");
+                        return;
+                    }
+
+                    string answer = File.ReadAllText(answerPath);
+
+                    Form editor = new Form()
+                    {
+                        Text = "답변 수정",
+                        Size = new Size(500, 350)
+                    };
+
+                    TextBox answerEditor = new TextBox()
+                    {
+                        Multiline = true,
+                        Text = answer,
+                        Size = new Size(450, 200),
+                        Location = new Point(10, 10)
+                    };
+
+                    answerEditor.SelectionStart = answerEditor.Text.Length;
+                    answerEditor.SelectionLength = 0;
+
+                    Button btnSave = new Button()
+                    {
+                        Text = "저장",
+                        Location = new Point(360, 220),
+                        Size = new Size(100, 30)
+                    };
+
+                    btnSave.Click += (se, ee) =>
+                    {
+                        File.WriteAllText(answerPath, answerEditor.Text);
+                        MessageBox.Show("수정 완료!");
+                        editor.Close();
+                    };
+
+                    editor.Controls.Add(answerEditor);
+                    editor.Controls.Add(btnSave);
+                    editor.ShowDialog();
+                }
+            };
+
+            selectionForm.Controls.Add(listBox);
+            selectionForm.Controls.Add(btnOpen);
+            selectionForm.ShowDialog();
         }
 
         private void Form1_Load(object sender, EventArgs e)
