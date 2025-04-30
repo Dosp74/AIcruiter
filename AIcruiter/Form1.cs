@@ -9,6 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing.Configuration;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Net;
 
 namespace AIcruiter
 {
@@ -29,6 +32,9 @@ namespace AIcruiter
             }
         }
 
+        private static readonly string apiKey = Environment.GetEnvironmentVariable("OPEN_API_KEY"); // 시스템 환경 변수 설정.
+        private static readonly string apiEndpoint = "https://api.openai.com/v1/chat/completions";
+
         //.txt파일의 데이터를 불러올 리스트 생성
         List<Question> questions = new List<Question>();
 
@@ -40,12 +46,13 @@ namespace AIcruiter
         {
             InitializeComponent();
         }
+
         private void btn1_random_Click(object sender, EventArgs e)
         {
             //0 ~ Count-1 중 난수 생성
             rNumber = rand.Next(questions.Count);
 
-            // 질문 내용 (하나만 하드코딩으로 설정//추후 txt파일로 대체)
+            // 질문 내용
             string question = questions[rNumber].question;
             int questionIdx = questions[rNumber].idx;
 
@@ -143,7 +150,6 @@ namespace AIcruiter
                     MessageBox.Show("파일 저장 오류: " + ex.Message, "오류");
                 }
             };
-
             modalForm.Controls.Add(saveButton);
 
             // 채점 버튼 추가
@@ -152,12 +158,14 @@ namespace AIcruiter
             gradeButton.Location = new System.Drawing.Point(390, 200);
             gradeButton.Size = new System.Drawing.Size(80, 30);
 
-            gradeButton.Click += (s, ev) =>
+            gradeButton.Click += async (s, ev) =>
             {
-                // 점수를 100으로 고정하여 표시(추후 변경)
-                int score = 100;
+                // GPT에 보내는 질문을 입력합니다.
+                string query = questions[rNumber].question + "에 대해서 " + questions[rNumber].answer +"라는 정답을 기준으로 " + answerBox.Text + "의 점수와 피드백을 제공해줘(200자 이하).";
 
-                MessageBox.Show($"점수: {score} / 100", "채점 결과");
+                // 응답을 받아오는 메서드 호출
+                string response = await GetGptResponse(query);
+                MessageBox.Show("GPT 응답: " + response);
             };
             modalForm.Controls.Add(gradeButton);
 
@@ -257,18 +265,20 @@ namespace AIcruiter
         private void Form1_Load(object sender, EventArgs e)
         {
             //.txt파일 위치는 \temp\bin\Debug 폴더
-            string path = "DataStructure.txt";
+            string[] files = { "DataStructure.txt", "OS.txt" };
 
-            //줄 단위로 하여 질문을 리스트에 추가
-            string[] content = File.ReadAllLines(path);
-            foreach (string line in content)
+            foreach (string path in files)
             {
-                string[] columns = line.Split('/');
+                //줄 단위로 하여 질문을 리스트에 추가
+                string[] content = File.ReadAllLines(path);
+                foreach (string line in content)
+                {
+                    string[] columns = line.Split('/');
 
-                Question tQuestion = new Question(int.Parse(columns[0]), columns[1], columns[2]);
-                questions.Add(tQuestion);
+                    Question tQuestion = new Question(int.Parse(columns[0]), columns[1], columns[2]);
+                    questions.Add(tQuestion);
+                }
             }
-
             //바탕색 기본색으로 변경(MDI설정으로 인해 회색으로 설정되어 있음)
             this.Controls[this.Controls.Count - 1].BackColor = SystemColors.Control;
         }
@@ -280,6 +290,41 @@ namespace AIcruiter
             Answer answer = new Answer(questions);
             answer.Owner = this;
             answer.Show();
+        }
+
+        // GPT에 쿼리 보내고 응답 받아오는 함수
+        private static async Task<string> GetGptResponse(string query)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
+
+                var requestData = new
+                {
+                    model = "gpt-4-turbo", // 최신 모델 사용
+                    messages = new[]
+                    {
+            new { role = "user", content = query }
+        },
+                    max_tokens = 500
+                };
+
+                string jsonData = JsonConvert.SerializeObject(requestData);
+
+                var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PostAsync(apiEndpoint, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    dynamic jsonResponse = JsonConvert.DeserializeObject(responseContent);
+                    return jsonResponse.choices[0].message.content.ToString().Trim();
+                }
+                else
+                {
+                    return "Error: " + response.StatusCode;
+                }
+            }
         }
     }
 }
