@@ -19,16 +19,18 @@ namespace AIcruiter
     {
         public class Question
         {
-            //(인덱스, 질문, 정답)으로 구성
+            // 인덱스, 질문, 정답, 카테고리로 구성
             public int idx;
             public string question;
             public string answer;
+            public string category; // 카테고리 추가
 
-            public Question(int idx, string question, string answer)
+            public Question(int idx, string question, string answer, string category)
             {
                 this.idx = idx;
                 this.question = question;
                 this.answer = answer;
+                this.category = category;
             }
         }
 
@@ -55,10 +57,11 @@ namespace AIcruiter
             // 질문 내용
             string question = questions[rNumber].question;
             int questionIdx = questions[rNumber].idx;
+            string category = questions[rNumber].category;
 
-            // 저장 경로 설정
-            string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DataStructureAnswer");
-            string answerPath = Path.Combine(folderPath, $"DataStructureAnswer{questionIdx}.txt");
+            // 카테고리별 답변 저장 경로 설정
+            string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, category + "Answer");
+            string answerPath = Path.Combine(folderPath, $"{category}Answer{questionIdx}.txt");
 
             // 모달창 생성
             Form modalForm = new Form();
@@ -189,7 +192,8 @@ namespace AIcruiter
 
             foreach (var q in questions)
             {
-                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DataStructureAnswer", $"DataStructureAnswer{q.idx}.txt");
+                string category = q.category;
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, category + "Answer", $"{category}Answer{q.idx}.txt");
 
                 if (File.Exists(filePath))
                 {
@@ -210,7 +214,8 @@ namespace AIcruiter
                 if (listBox.SelectedIndex >= 0)
                 {
                     int selectedIdx = validIndexes[listBox.SelectedIndex];
-                    string answerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DataStructureAnswer", $"DataStructureAnswer{selectedIdx}.txt");
+                    string category = questions.First(q => q.idx == selectedIdx).category;
+                    string answerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, category + "Answer", $"{category}Answer{selectedIdx}.txt");
 
                     if (!File.Exists(answerPath))
                     {
@@ -265,20 +270,28 @@ namespace AIcruiter
         private void Form1_Load(object sender, EventArgs e)
         {
             //.txt파일 위치는 \temp\bin\Debug 폴더
-            string[] files = { "DataStructure.txt", "OS.txt" };
-
-            foreach (string path in files)
+            var files = new Dictionary<string, string>
             {
-                //줄 단위로 하여 질문을 리스트에 추가
-                string[] content = File.ReadAllLines(path);
-                foreach (string line in content)
+                // key는 파일 이름, value는 카테고리로, 각 파일이 어떤 카테고리에 속하는지를 매핑
+                { "DataStructure.txt", "DataStructure" },
+                { "OS.txt", "OS" }
+            };
+
+            foreach (var kvp in files)
+            {
+                string path = kvp.Key;
+                string category = kvp.Value;
+
+                // 줄 단위로 하여 질문을 리스트에 추가
+                foreach (string line in File.ReadAllLines(path))
                 {
                     string[] columns = line.Split('/');
 
-                    Question tQuestion = new Question(int.Parse(columns[0]), columns[1], columns[2]);
+                    Question tQuestion = new Question(int.Parse(columns[0]), columns[1], columns[2], category);
                     questions.Add(tQuestion);
                 }
             }
+
             //바탕색 기본색으로 변경(MDI설정으로 인해 회색으로 설정되어 있음)
             this.Controls[this.Controls.Count - 1].BackColor = SystemColors.Control;
         }
