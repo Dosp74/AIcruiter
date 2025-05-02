@@ -163,8 +163,15 @@ namespace AIcruiter
 
             gradeButton.Click += async (s, ev) =>
             {
+                string currentCategory = questions[rNumber].category;
+
                 // GPT에 보내는 질문을 입력합니다.
-                string query = questions[rNumber].question + "에 대해서 " + questions[rNumber].answer +"라는 정답을 기준으로 " + answerBox.Text + "의 점수와 피드백을 제공해줘(200자 이하).";
+                string query;
+
+                if (currentCategory == "Character")
+                    query = questions[rNumber].question + "에 대해서 일반적인 회사에서 중요하게 생각하는 인성 기준을 바탕으로 " + answerBox.Text + "라는 답변에 대한 점수와 피드백을 제공해줘(200자 이하).";
+                else
+                    query = questions[rNumber].question + "에 대해서 " + questions[rNumber].answer + "라는 정답을 기준으로 " + answerBox.Text + "의 점수와 피드백을 제공해줘(200자 이하).";
 
                 // 응답을 받아오는 메서드 호출
                 string response = await GetGptResponse(query);
@@ -274,7 +281,8 @@ namespace AIcruiter
             {
                 // key는 파일 이름, value는 카테고리로, 각 파일이 어떤 카테고리에 속하는지를 매핑
                 { "DataStructure.txt", "DataStructure" },
-                { "OS.txt", "OS" }
+                { "OS.txt", "OS" },
+                { "Character.txt", "Character" },
             };
 
             foreach (var kvp in files)
@@ -287,8 +295,11 @@ namespace AIcruiter
                 {
                     string[] columns = line.Split('/');
 
-                    Question tQuestion = new Question(int.Parse(columns[0]), columns[1], columns[2], category);
-                    questions.Add(tQuestion);
+                    int idx = int.Parse(columns[0]);
+                    string question = columns[1];
+                    string answer = columns.Length > 2 ? columns[2] : ""; // 인성 질문은 정답 키워드가 없음
+
+                    questions.Add(new Question(idx, question, answer, category));
                 }
             }
 

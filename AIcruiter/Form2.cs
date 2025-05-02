@@ -24,11 +24,9 @@ namespace AIcruiter
         private void Answer_Load(object sender, EventArgs e)
         {
             foreach (Form1.Question q in questions) {
-                string question;
-                string answer;
+                string question = q.question;
+                string answer = string.IsNullOrWhiteSpace(q.answer) ? "AI 평가 기준에 따릅니다." : q.answer;
 
-                question = q.question;
-                answer = q.answer;
                 AnswerNote.Text += "질문 : " + question + "\r\n";
                 AnswerNote.Text += "답 : " + answer + "\r\n\r\n\r\n";
             }
