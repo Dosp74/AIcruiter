@@ -12,6 +12,8 @@ using System.Drawing.Configuration;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.Net;
+using System.Windows.Forms.DataVisualization.Charting;
+using System.Text.RegularExpressions;
 
 namespace AIcruiter
 {
@@ -169,13 +171,140 @@ namespace AIcruiter
                 string query;
 
                 if (currentCategory == "Character")
-                    query = questions[rNumber].question + "에 대해서 일반적인 회사에서 중요하게 생각하는 인성 기준을 바탕으로 " + answerBox.Text + "라는 답변에 대한 점수와 피드백을 제공해줘(200자 이하).";
+                    query = $"질문: {questions[rNumber].question}\n" +
+                            $"답변: {answerBox.Text}\n" +
+                            $"회사의 인성 면접 기준(정직성, 책임감, 협업 능력 등)에 따라 답변을 평가해줘. " +
+                            $"답변이 구체적이고 진정성이 느껴지며 실제 상황을 바탕으로 한 예시가 포함되어야 높은 점수를 받을 수 있어. " +
+                            $"형식적인 답변과 일반적인 말만 나열된 경우에는 낮은 점수를 줘. " +
+                            $"점수를 부여할 때 엄격하게 판단하고 지나치게 후한 점수를 주지 마. " +
+                            $"100점 만점 기준으로 채점하고, '정확성', '논리성', '표현력' 항목별 점수를 포함해 아래 형식의 정확한 JSON으로 응답해줘. 각 점수는 정수형 숫자여야 하고, '점'이라는 단어는 포함하지 마. " +
+                            $"예시:\r\n{{\r\n  \"점수\": ?,\r\n  \"정확성\": ?,\r\n  \"논리성\": ?,\r\n  \"표현력\": ?,\r\n  \"피드백\": \"(200자 이하의 구체적인 내용)\"\r\n}}";
+
                 else
-                    query = questions[rNumber].question + "에 대해서 " + questions[rNumber].answer + "라는 정답을 기준으로 " + answerBox.Text + "의 점수와 피드백을 제공해줘(200자 이하).";
+                {
+                    query = $"질문: {questions[rNumber].question}\n" +
+                            $"정답 키워드: {questions[rNumber].answer}\n" +
+                            $"답변: {answerBox.Text}\n\n" +
+                            $"답변이 정답과 다르더라도 개념 설명이 정확하다면 점수를 부여해도 돼. " +
+                            $"정확성과 이해도를 고려해 100점 만점으로 채점하고, '정확성', '논리성', '표현력' 항목별 점수를 포함하여 아래 형식의 정확한 JSON으로 응답해줘. 각 점수는 정수형 숫자여야 하고, '점'이라는 단어는 포함하지 마. " +
+                            $"예시:\r\n{{\r\n  \"점수\": ?,\r\n  \"정확성\": ?,\r\n  \"논리성\": ?,\r\n  \"표현력\": ?,\r\n  \"피드백\": \"(200자 이하의 구체적인 내용)\"\r\n}}";
+                }
+                // query = questions[rNumber].question + "에 대해서 " + questions[rNumber].answer + "라는 정답을 기준으로 " + answerBox.Text + "의 점수와 피드백을 제공해줘(200자 이하).";
 
                 // 응답을 받아오는 메서드 호출
                 string response = await GetGptResponse(query);
-                MessageBox.Show("GPT 응답: " + response);
+                // MessageBox.Show(response);
+
+                int score = 0, accuracy = 0, logic = 0, clarity = 0;
+                string feedbackText = response;
+
+                try
+                {
+                    // JSON 파싱
+                    dynamic json = JsonConvert.DeserializeObject(response);
+
+                    score = (int)json["점수"];
+                    accuracy = (int)json["정확성"];
+                    logic = (int)json["논리성"];
+                    clarity = (int)json["표현력"];
+                    feedbackText = json["피드백"];
+                }
+                catch
+                {
+                    // JSON 파싱 실패 시 정규식으로 매칭
+                    var matchScore = Regex.Match(response, @"점수\s*[:：]?\s*(\d+)");
+                    if (matchScore.Success)
+                        score = Math.Min(100, int.Parse(matchScore.Groups[1].Value));
+
+                    var matchAcc = Regex.Match(response, @"정확성\s*[:：]?\s*(\d+)");
+                    if (matchAcc.Success)
+                        accuracy = int.Parse(matchAcc.Groups[1].Value);
+
+                    var matchLogic = Regex.Match(response, @"논리성\s*[:：]?\s*(\d+)");
+                    if (matchLogic.Success)
+                        logic = int.Parse(matchLogic.Groups[1].Value);
+
+                    var matchClarity = Regex.Match(response, @"표현력\s*[:：]?\s*(\d+)");
+                    if (matchClarity.Success)
+                        clarity = int.Parse(matchClarity.Groups[1].Value);
+
+                    var matchFeedback = Regex.Match(response, @"피드백\s*[:：]?\s*(.+)");
+                    if (matchFeedback.Success)
+                        feedbackText = matchFeedback.Groups[1].Value.Trim();
+                }
+
+                string emoji;
+                if (score >= 90) emoji = "🏆";
+                else if (score >= 80) emoji = "😄";
+                else if (score >= 60) emoji = "🙂";
+                else emoji = "😞";
+
+                Form resultForm = new Form()
+                {
+                    Text = "채점 결과",
+                    Size = new Size(400, 500),
+                    StartPosition = FormStartPosition.CenterParent
+                };
+
+                // 점수를 이모지로 시각화
+                Label resultLabel = new Label()
+                {
+                    Text = $"{score}점 {emoji}",
+                    Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                    AutoSize = true,
+                    Location = new Point(30, 30)
+                };
+                resultForm.Controls.Add(resultLabel);
+
+                // 점수를 프로그레스 바로 시각화
+                ProgressBar progressBar = new ProgressBar()
+                {
+                    Value = score,
+                    Maximum = 100,
+                    Minimum = 0,
+                    Size = new Size(300, 25),
+                    Location = new Point(30, 70),
+                    Style = ProgressBarStyle.Continuous
+                };
+                resultForm.Controls.Add(progressBar);
+
+                // 상세 피드백
+                Button detailButton = new Button()
+                {
+                    Text = "상세 피드백 확인",
+                    Size = new Size(150, 30),
+                    Location = new Point(30, 110)
+                };
+                detailButton.Click += (s2, e2) =>
+                {
+                    MessageBox.Show(feedbackText, "상세 피드백");
+                };
+                resultForm.Controls.Add(detailButton);
+
+                // 항목별 점수를 차트로 시각화
+                if (accuracy > 0 || logic > 0 || clarity > 0)
+                {
+                    Chart chart = new Chart()
+                    {
+                        Size = new Size(300, 200),
+                        Location = new Point(30, 160)
+                    };
+                    chart.ChartAreas.Add(new ChartArea("ScoreArea"));
+
+                    Series series = new Series("항목별 점수")
+                    {
+                        ChartType = SeriesChartType.Column,
+                        Color = Color.CornflowerBlue
+                    };
+                    series.Points.AddXY("정확성", accuracy);
+                    series.Points.AddXY("논리성", logic);
+                    series.Points.AddXY("표현력", clarity);
+
+                    chart.Series.Add(series);
+                    resultForm.Controls.Add(chart);
+                }
+
+                resultForm.ShowDialog();
             };
             modalForm.Controls.Add(gradeButton);
 
