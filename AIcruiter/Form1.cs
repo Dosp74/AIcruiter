@@ -402,7 +402,7 @@ namespace AIcruiter
 
             Label lblAlgorithm = new Label()
             {
-                Text = "알고리즘 질문",
+                Text = "운영체제 질문",
                 Location = new Point(10, 180),
                 Size = new Size(360, 20),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold)
