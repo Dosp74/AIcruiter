@@ -76,7 +76,7 @@
             this.btnAnswer.Name = "btnAnswer";
             this.btnAnswer.Size = new System.Drawing.Size(183, 90);
             this.btnAnswer.TabIndex = 3;
-            this.btnAnswer.Text = "키워드 확인";
+            this.btnAnswer.Text = "모범 답안 확인";
             this.btnAnswer.UseVisualStyleBackColor = true;
             this.btnAnswer.Click += new System.EventHandler(this.btnAnswer_Click);
             // 

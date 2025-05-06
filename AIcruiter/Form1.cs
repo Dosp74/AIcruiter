@@ -615,14 +615,171 @@ namespace AIcruiter
             this.Controls[this.Controls.Count - 1].BackColor = SystemColors.Control;
         }
 
-        //정답확인 버튼 추가
         private void btnAnswer_Click(object sender, EventArgs e)
         {
-            //Answer 폼 생성
-            Answer answer = new Answer(questions);
-            answer.Owner = this;
-            answer.Show();
+            // 데이터 파일 경로 설정
+            string dataStructureFilePath = @"C:\Users\82103\Desktop\응소실_팀플\temp\AIcruiter\bin\Debug\DataStructure.txt";
+            string operatingSystemFilePath = @"C:\Users\82103\Desktop\응소실_팀플\temp\AIcruiter\bin\Debug\OS.txt";
+
+            Form answerForm = new Form();
+            answerForm.Text = "정답 확인";
+            answerForm.Size = new Size(500, 600);
+            answerForm.StartPosition = FormStartPosition.CenterParent;
+
+            // 검색용 텍스트박스 추가
+            TextBox searchBox = new TextBox();
+            searchBox.Size = new Size(360, 30);
+            searchBox.Location = new Point(10, 10);
+            answerForm.Controls.Add(searchBox);
+
+            // 각 카테고리별 제목 라벨 추가
+            Label lblDataStructure = new Label()
+            {
+                Text = "자료구조 질문",
+                Location = new Point(10, 50),
+                Size = new Size(360, 20),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+
+            Label lblOperatingSystem = new Label()
+            {
+                Text = "운영체제 질문",
+                Location = new Point(10, 180),
+                Size = new Size(360, 20),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+
+            // 각 카테고리별 ListBox 추가
+            ListBox dataStructureListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 70) };
+            ListBox operatingSystemListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200) };
+
+            // 자료구조 질문 파일 경로 및 운영체제 질문 파일 경로를 통해 질문 추가
+            if (File.Exists(dataStructureFilePath))
+            {
+                foreach (string line in File.ReadAllLines(dataStructureFilePath))
+                {
+                    string[] columns = line.Split('/');
+                    string question = columns[1];
+                    dataStructureListBox.Items.Add(question); // 질문을 ListBox에 추가
+                }
+            }
+
+            if (File.Exists(operatingSystemFilePath))
+            {
+                foreach (string line in File.ReadAllLines(operatingSystemFilePath))
+                {
+                    string[] columns = line.Split('/');
+                    string question = columns[1];
+                    operatingSystemListBox.Items.Add(question); // 질문을 ListBox에 추가
+                }
+            }
+
+            // 검색 기능 구현
+            searchBox.TextChanged += (s, ev) =>
+            {
+                string searchText = searchBox.Text.ToLower(); // 소문자로 변환하여 대소문자 구분 없이 검색
+
+                // 각 ListBox의 항목을 초기화하고 필터링된 항목만 추가
+                dataStructureListBox.Items.Clear();
+                operatingSystemListBox.Items.Clear();
+
+                // 자료구조 질문 검색
+                foreach (var line in File.ReadAllLines(dataStructureFilePath))
+                {
+                    string[] columns = line.Split('/');
+                    string question = columns[1].ToLower(); // 소문자로 변환하여 검색
+
+                    if (question.Contains(searchText))
+                    {
+                        dataStructureListBox.Items.Add(columns[1]);
+                    }
+                }
+
+                // 운영체제 질문 검색
+                foreach (var line in File.ReadAllLines(operatingSystemFilePath))
+                {
+                    string[] columns = line.Split('/');
+                    string question = columns[1].ToLower(); // 소문자로 변환하여 검색
+
+                    if (question.Contains(searchText))
+                    {
+                        operatingSystemListBox.Items.Add(columns[1]);
+                    }
+                }
+            };
+
+            // 보기 버튼 추가
+            Button btnOpen = new Button()
+            {
+                Text = "보기",
+                Location = new Point(290, 460),  // Y 값 조정
+                Size = new Size(80, 30)
+            };
+
+            btnOpen.Click += (s, ev) =>
+            {
+                ListBox selectedListBox = null;
+                string selectedFilePath = null;
+
+                // 각 카테고리에서 선택된 항목을 구분
+                if (dataStructureListBox.SelectedIndex >= 0)
+                {
+                    selectedListBox = dataStructureListBox;
+                    selectedFilePath = dataStructureFilePath;
+                }
+                else if (operatingSystemListBox.SelectedIndex >= 0)
+                {
+                    selectedListBox = operatingSystemListBox;
+                    selectedFilePath = operatingSystemFilePath;
+                }
+
+                if (selectedListBox != null && selectedListBox.SelectedIndex >= 0)
+                {
+                    int selectedIdx = selectedListBox.SelectedIndex; // 선택된 질문 인덱스
+
+                    // 선택된 카테고리의 해당 질문에 대한 모범 답안을 가져오기
+                    string answerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, selectedFilePath == dataStructureFilePath ? "DataStructureAnswer" : "OSAnswer", $"{selectedIdx + 1}.txt");
+
+                    if (!File.Exists(answerPath))
+                    {
+                        MessageBox.Show("모범 답변을 찾을 수 없습니다.", "오류");
+                        return;
+                    }
+
+                    string answer = File.ReadAllText(answerPath); // 답변 파일을 읽어옴
+
+                    Form editor = new Form()
+                    {
+                        Text = "모범 답안 보기",
+                        Size = new Size(500, 350)
+                    };
+
+                    TextBox answerEditor = new TextBox()
+                    {
+                        Multiline = true,
+                        Text = answer,
+                        Size = new Size(450, 200),
+                        Location = new Point(10, 10)
+                    };
+
+                    editor.Controls.Add(answerEditor);
+                    editor.ShowDialog();
+                }
+            };
+
+            // 폼에 추가
+            answerForm.Controls.Add(lblDataStructure);
+            answerForm.Controls.Add(lblOperatingSystem);
+            answerForm.Controls.Add(dataStructureListBox);
+            answerForm.Controls.Add(operatingSystemListBox);
+            answerForm.Controls.Add(btnOpen);
+            answerForm.ShowDialog();
         }
+
+
+
+
+
 
         // GPT에 쿼리 보내고 응답 받아오는 함수
         private static async Task<string> GetGptResponse(string query)
