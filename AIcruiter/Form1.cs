@@ -37,6 +37,7 @@ namespace AIcruiter
         }
 
         private static readonly string apiKey = Environment.GetEnvironmentVariable("OPEN_API_KEY"); // 시스템 환경 변수 설정.
+
         private static readonly string apiEndpoint = "https://api.openai.com/v1/chat/completions";
 
         //.txt파일의 데이터를 불러올 리스트 생성
@@ -51,9 +52,48 @@ namespace AIcruiter
             InitializeComponent();
         }
 
+        //선아 - mdi폼 수정 확인중
+        private void btn1_random1_Click(object sender, EventArgs e)
+        {
+            // Form3을 생성하고 부모 폼 설정
+            Form4 form4 = new Form4();
+            form4.MdiParent = this;  // Form1을 부모 폼으로 설정
+
+            // 부모 폼에서 랜덤 질문 버튼의 위치 가져오기
+            int btn1RandomBottom = btn1_random.Bottom;  // 버튼의 하단 위치 (버튼 위로 자식 폼 배치)
+
+            // Form3 크기 설정
+            form4.Size = new Size(500, 300);  // 자식 폼 크기 설정
+
+            // 자식 폼을 부모 폼의 중앙 아래에 위치시킴
+            form4.Location = new Point(
+                this.Left + (this.Width - form4.Width) / 2,  // 부모 폼 중앙에 위치하도록 X 좌표 설정
+                this.Top + btn1RandomBottom + 20  // 버튼 아래에 여유 공간 20px을 두고 Y 좌표 설정
+            );
+
+            // 자식 폼 띄우기
+            form4.Show();
+        }
+
+
+
+
+
+        private Timer stopwatchTimer;  // 타이머 객체
+        private TimeSpan elapsedTime;
+        private Label stopwatchLabel;  // 경과 시간을 표시할 레이블
+
+        // StopwatchTimer_Tick 메서드는 그대로 사용
+        private void StopwatchTimer_Tick(object sender, EventArgs e)
+        {
+            elapsedTime = elapsedTime.Add(TimeSpan.FromSeconds(1));
+            stopwatchLabel.Text = elapsedTime.ToString(@"mm\:ss");
+        }
+
+
         private void btn1_random_Click(object sender, EventArgs e)
         {
-            //0 ~ Count-1 중 난수 생성
+            // 0 ~ Count-1 중 난수 생성
             rNumber = rand.Next(questions.Count);
 
             // 질문 내용
@@ -64,6 +104,13 @@ namespace AIcruiter
             // 카테고리별 답변 저장 경로 설정
             string folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, category + "Answer");
             string answerPath = Path.Combine(folderPath, $"{category}Answer{questionIdx}.txt");
+
+            // 스톱워치 초기화
+            stopwatchTimer = new Timer();
+            stopwatchTimer.Interval = 1000; // 1초마다 실행
+            stopwatchTimer.Tick += StopwatchTimer_Tick;
+
+            elapsedTime = TimeSpan.Zero;
 
             // 모달창 생성
             Form modalForm = new Form();
@@ -86,6 +133,7 @@ namespace AIcruiter
             answerBox.Location = new System.Drawing.Point(20, 80);
             modalForm.Controls.Add(answerBox);
 
+            // 이전 답변 보기 버튼 추가
             if (File.Exists(answerPath))
             {
                 Button btnShowPrevious = new Button
@@ -148,6 +196,7 @@ namespace AIcruiter
                     File.WriteAllText(answerPath, content);
                     MessageBox.Show("답변이 저장되었습니다.", "저장 완료");
 
+                    
                     modalForm.Close();
                 }
                 catch (Exception ex)
@@ -157,14 +206,29 @@ namespace AIcruiter
             };
             modalForm.Controls.Add(saveButton);
 
+            // 스톱워치 타이머를 시작
+            stopwatchTimer.Start();
+
+            // 스톱워치 시간을 표시할 라벨
+            stopwatchLabel = new Label()
+            {
+                Location = new Point(20, 240),
+                Size = new Size(200, 30),
+                Text = "00:00"
+            };
+            modalForm.Controls.Add(stopwatchLabel);
+
             // 채점 버튼 추가
             Button gradeButton = new Button();
             gradeButton.Text = "채점";
             gradeButton.Location = new System.Drawing.Point(390, 200);
             gradeButton.Size = new System.Drawing.Size(80, 30);
 
+           
             gradeButton.Click += async (s, ev) =>
             {
+                // 스톱워치 멈추기
+                stopwatchTimer.Stop();
                 string currentCategory = questions[rNumber].category;
 
                 // GPT에 보내는 질문을 입력합니다.
@@ -305,6 +369,7 @@ namespace AIcruiter
                 }
 
                 resultForm.ShowDialog();
+                
             };
             modalForm.Controls.Add(gradeButton);
 
@@ -312,20 +377,61 @@ namespace AIcruiter
             modalForm.ShowDialog();
         }
 
+
         private void btn2_load_Click(object sender, EventArgs e)
         {
             Form selectionForm = new Form();
             selectionForm.Text = "답변 선택";
-            selectionForm.Size = new Size(400, 300);
+            selectionForm.Size = new Size(400, 450);
             selectionForm.StartPosition = FormStartPosition.CenterParent;
 
-            ListBox listBox = new ListBox();
-            listBox.Size = new Size(360, 180);
-            listBox.Location = new Point(10, 10);
+            // 각 카테고리별로 ListBox 생성
+            ListBox listBoxDataStructure = new ListBox();
+            listBoxDataStructure.Size = new Size(360, 100);
+            listBoxDataStructure.Location = new Point(10, 40);
+            listBoxDataStructure.SelectionMode = SelectionMode.One;  // 한 개 항목만 선택 가능
+
+            ListBox listBoxAlgorithm = new ListBox();
+            listBoxAlgorithm.Size = new Size(360, 100);
+            listBoxAlgorithm.Location = new Point(10, 150);
+            listBoxAlgorithm.SelectionMode = SelectionMode.One;  // 한 개 항목만 선택 가능
+
+            ListBox listBoxCharacter = new ListBox();
+            listBoxCharacter.Size = new Size(360, 100);
+            listBoxCharacter.Location = new Point(10, 260);
+            listBoxCharacter.SelectionMode = SelectionMode.One;  // 한 개 항목만 선택 가능
+
+            // 각 카테고리 제목을 위한 Label
+            Label lblDataStructure = new Label()
+            {
+                Text = "자료구조 질문",
+                Location = new Point(10, 10),
+                Size = new Size(360, 20),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+
+            Label lblAlgorithm = new Label()
+            {
+                Text = "알고리즘 질문",
+                Location = new Point(10, 120),
+                Size = new Size(360, 20),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+
+            Label lblCharacter = new Label()
+            {
+                Text = "인성 면접 질문",
+                Location = new Point(10, 230),
+                Size = new Size(360, 20),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
 
             // 질문 인덱스 매핑용 리스트
-            List<int> validIndexes = new List<int>();
+            List<int> validIndexesDataStructure = new List<int>();
+            List<int> validIndexesAlgorithm = new List<int>();
+            List<int> validIndexesCharacter = new List<int>();
 
+            // 각 카테고리의 질문을 해당 ListBox에 추가
             foreach (var q in questions)
             {
                 string category = q.category;
@@ -333,23 +439,58 @@ namespace AIcruiter
 
                 if (File.Exists(filePath))
                 {
-                    listBox.Items.Add($"{q.idx}. {q.question}");
-                    validIndexes.Add(q.idx); // .txt 파일이 존재하는 질문의 인덱스만 저장
+                    if (category == "DataStructure")
+                    {
+                        listBoxDataStructure.Items.Add($"{q.idx}. {q.question}");
+                        validIndexesDataStructure.Add(q.idx);
+                    }
+                    else if (category == "Algorithm")
+                    {
+                        listBoxAlgorithm.Items.Add($"{q.idx}. {q.question}");
+                        validIndexesAlgorithm.Add(q.idx);
+                    }
+                    else if (category == "Character")
+                    {
+                        listBoxCharacter.Items.Add($"{q.idx}. {q.question}");
+                        validIndexesCharacter.Add(q.idx);
+                    }
                 }
             }
 
+            // '보기' 버튼
             Button btnOpen = new Button()
             {
                 Text = "보기",
-                Location = new Point(290, 200),
+                Location = new Point(290, 380),
                 Size = new Size(80, 30)
             };
 
+            // 버튼 클릭 시 선택된 항목의 내용을 확인하는 동작
             btnOpen.Click += (s, ev) =>
             {
-                if (listBox.SelectedIndex >= 0)
+                ListBox selectedListBox = null;
+                List<int> validIndexes = null;
+
+                // 선택된 ListBox에 따라 다르게 동작
+                if (listBoxDataStructure.SelectedIndex >= 0)
                 {
-                    int selectedIdx = validIndexes[listBox.SelectedIndex];
+                    selectedListBox = listBoxDataStructure;
+                    validIndexes = validIndexesDataStructure;
+                }
+                else if (listBoxAlgorithm.SelectedIndex >= 0)
+                {
+                    selectedListBox = listBoxAlgorithm;
+                    validIndexes = validIndexesAlgorithm;
+                }
+                else if (listBoxCharacter.SelectedIndex >= 0)
+                {
+                    selectedListBox = listBoxCharacter;
+                    validIndexes = validIndexesCharacter;
+                }
+
+                if (selectedListBox?.SelectedIndex >= 0)
+                {
+                    int selectedIdx = validIndexes[selectedListBox.SelectedIndex];
                     string category = questions.First(q => q.idx == selectedIdx).category;
                     string answerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, category + "Answer", $"{category}Answer{selectedIdx}.txt");
 
@@ -361,6 +502,7 @@ namespace AIcruiter
 
                     string answer = File.ReadAllText(answerPath);
 
+                    // 답변 수정 폼
                     Form editor = new Form()
                     {
                         Text = "답변 수정",
@@ -374,9 +516,6 @@ namespace AIcruiter
                         Size = new Size(450, 200),
                         Location = new Point(10, 10)
                     };
-
-                    answerEditor.SelectionStart = answerEditor.Text.Length;
-                    answerEditor.SelectionLength = 0;
 
                     Button btnSave = new Button()
                     {
@@ -396,12 +535,26 @@ namespace AIcruiter
                     editor.Controls.Add(btnSave);
                     editor.ShowDialog();
                 }
+                else
+                {
+                    MessageBox.Show("먼저 질문을 선택해 주세요.", "선택 필요");
+                }
             };
 
-            selectionForm.Controls.Add(listBox);
+            // 각 ListBox를 폼에 추가
+            selectionForm.Controls.Add(lblDataStructure);
+            selectionForm.Controls.Add(lblAlgorithm);
+            selectionForm.Controls.Add(lblCharacter);
+            selectionForm.Controls.Add(listBoxDataStructure);
+            selectionForm.Controls.Add(listBoxAlgorithm);
+            selectionForm.Controls.Add(listBoxCharacter);
             selectionForm.Controls.Add(btnOpen);
+
             selectionForm.ShowDialog();
         }
+
+
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
