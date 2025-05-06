@@ -382,30 +382,20 @@ namespace AIcruiter
         {
             Form selectionForm = new Form();
             selectionForm.Text = "답변 선택";
-            selectionForm.Size = new Size(400, 450);
+            selectionForm.Size = new Size(400, 600);
             selectionForm.StartPosition = FormStartPosition.CenterParent;
 
-            // 각 카테고리별로 ListBox 생성
-            ListBox listBoxDataStructure = new ListBox();
-            listBoxDataStructure.Size = new Size(360, 100);
-            listBoxDataStructure.Location = new Point(10, 40);
-            listBoxDataStructure.SelectionMode = SelectionMode.One;  // 한 개 항목만 선택 가능
+            // 검색용 텍스트박스 추가
+            TextBox searchBox = new TextBox();
+            searchBox.Size = new Size(360, 30);
+            searchBox.Location = new Point(10, 10);
+            selectionForm.Controls.Add(searchBox);
 
-            ListBox listBoxAlgorithm = new ListBox();
-            listBoxAlgorithm.Size = new Size(360, 100);
-            listBoxAlgorithm.Location = new Point(10, 150);
-            listBoxAlgorithm.SelectionMode = SelectionMode.One;  // 한 개 항목만 선택 가능
-
-            ListBox listBoxCharacter = new ListBox();
-            listBoxCharacter.Size = new Size(360, 100);
-            listBoxCharacter.Location = new Point(10, 260);
-            listBoxCharacter.SelectionMode = SelectionMode.One;  // 한 개 항목만 선택 가능
-
-            // 각 카테고리 제목을 위한 Label
+            // 각 카테고리별 제목 라벨 추가
             Label lblDataStructure = new Label()
             {
                 Text = "자료구조 질문",
-                Location = new Point(10, 10),
+                Location = new Point(10, 50),
                 Size = new Size(360, 20),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
@@ -413,25 +403,30 @@ namespace AIcruiter
             Label lblAlgorithm = new Label()
             {
                 Text = "알고리즘 질문",
-                Location = new Point(10, 120),
+                Location = new Point(10, 180),
                 Size = new Size(360, 20),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
 
-            Label lblCharacter = new Label()
+            Label lblCharacterInterview = new Label()
             {
                 Text = "인성 면접 질문",
-                Location = new Point(10, 230),
+                Location = new Point(10, 310),
                 Size = new Size(360, 20),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
 
-            // 질문 인덱스 매핑용 리스트
-            List<int> validIndexesDataStructure = new List<int>();
-            List<int> validIndexesAlgorithm = new List<int>();
-            List<int> validIndexesCharacter = new List<int>();
+            // 각 카테고리별 ListBox 추가
+            ListBox dataStructureListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 70) };
+            ListBox algorithmListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200) };
+            ListBox characterInterviewListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 330) };
 
-            // 각 카테고리의 질문을 해당 ListBox에 추가
+            // 각 카테고리별 데이터 준비
+            List<int> dataStructureIndexes = new List<int>();
+            List<int> algorithmIndexes = new List<int>();
+            List<int> characterInterviewIndexes = new List<int>();
+
+            // 카테고리별 항목 추가
             foreach (var q in questions)
             {
                 string category = q.category;
@@ -441,56 +436,91 @@ namespace AIcruiter
                 {
                     if (category == "DataStructure")
                     {
-                        listBoxDataStructure.Items.Add($"{q.idx}. {q.question}");
-                        validIndexesDataStructure.Add(q.idx);
+                        dataStructureListBox.Items.Add($"{q.idx}. {q.question}");
+                        dataStructureIndexes.Add(q.idx);
                     }
                     else if (category == "Algorithm")
                     {
-                        listBoxAlgorithm.Items.Add($"{q.idx}. {q.question}");
-                        validIndexesAlgorithm.Add(q.idx);
+                        algorithmListBox.Items.Add($"{q.idx}. {q.question}");
+                        algorithmIndexes.Add(q.idx);
                     }
                     else if (category == "Character")
                     {
-                        listBoxCharacter.Items.Add($"{q.idx}. {q.question}");
-                        validIndexesCharacter.Add(q.idx);
+                        characterInterviewListBox.Items.Add($"{q.idx}. {q.question}");
+                        characterInterviewIndexes.Add(q.idx);
                     }
                 }
             }
 
-            // '보기' 버튼
+            // 검색 기능 구현
+            searchBox.TextChanged += (s, ev) =>
+            {
+                string searchText = searchBox.Text.ToLower(); // 소문자로 변환하여 대소문자 구분 없이 검색
+
+                // 각 ListBox의 항목을 초기화하고 필터링된 항목만 추가
+                dataStructureListBox.Items.Clear();
+                algorithmListBox.Items.Clear();
+                characterInterviewListBox.Items.Clear();
+
+                foreach (var q in questions)
+                {
+                    string questionText = q.question.ToLower(); // 소문자로 변환하여 검색
+
+                    // 카테고리별로 검색어가 포함된 항목만 추가
+                    if (questionText.Contains(searchText))
+                    {
+                        string category = q.category;
+                        string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, category + "Answer", $"{category}Answer{q.idx}.txt");
+
+                        if (File.Exists(filePath))
+                        {
+                            if (category == "DataStructure")
+                            {
+                                dataStructureListBox.Items.Add($"{q.idx}. {q.question}");
+                            }
+                            else if (category == "Algorithm")
+                            {
+                                algorithmListBox.Items.Add($"{q.idx}. {q.question}");
+                            }
+                            else if (category == "Character")
+                            {
+                                characterInterviewListBox.Items.Add($"{q.idx}. {q.question}");
+                            }
+                        }
+                    }
+                }
+            };
+
+            // 보기 버튼 추가
             Button btnOpen = new Button()
             {
                 Text = "보기",
-                Location = new Point(290, 380),
+                Location = new Point(290, 460),  // Y 값 조정
                 Size = new Size(80, 30)
             };
 
-            // 버튼 클릭 시 선택된 항목의 내용을 확인하는 동작
             btnOpen.Click += (s, ev) =>
             {
                 ListBox selectedListBox = null;
-                List<int> validIndexes = null;
 
-                // 선택된 ListBox에 따라 다르게 동작
-                if (listBoxDataStructure.SelectedIndex >= 0)
-                {
-                    selectedListBox = listBoxDataStructure;
-                    validIndexes = validIndexesDataStructure;
-                }
-                else if (listBoxAlgorithm.SelectedIndex >= 0)
-                {
-                    selectedListBox = listBoxAlgorithm;
-                    validIndexes = validIndexesAlgorithm;
-                }
-                else if (listBoxCharacter.SelectedIndex >= 0)
-                {
-                    selectedListBox = listBoxCharacter;
-                    validIndexes = validIndexesCharacter;
-                }
+                // 각 카테고리에서 선택된 항목을 구분
+                if (dataStructureListBox.SelectedIndex >= 0)
+                    selectedListBox = dataStructureListBox;
+                else if (algorithmListBox.SelectedIndex >= 0)
+                    selectedListBox = algorithmListBox;
+                else if (characterInterviewListBox.SelectedIndex >= 0)
+                    selectedListBox = characterInterviewListBox;
 
-                if (selectedListBox?.SelectedIndex >= 0)
+                if (selectedListBox != null && selectedListBox.SelectedIndex >= 0)
                 {
-                    int selectedIdx = validIndexes[selectedListBox.SelectedIndex];
+                    int selectedIdx = -1;
+                    if (selectedListBox == dataStructureListBox)
+                        selectedIdx = dataStructureIndexes[selectedListBox.SelectedIndex];
+                    else if (selectedListBox == algorithmListBox)
+                        selectedIdx = algorithmIndexes[selectedListBox.SelectedIndex];
+                    else if (selectedListBox == characterInterviewListBox)
+                        selectedIdx = characterInterviewIndexes[selectedListBox.SelectedIndex];
+
                     string category = questions.First(q => q.idx == selectedIdx).category;
                     string answerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, category + "Answer", $"{category}Answer{selectedIdx}.txt");
 
@@ -502,7 +532,6 @@ namespace AIcruiter
 
                     string answer = File.ReadAllText(answerPath);
 
-                    // 답변 수정 폼
                     Form editor = new Form()
                     {
                         Text = "답변 수정",
@@ -535,23 +564,20 @@ namespace AIcruiter
                     editor.Controls.Add(btnSave);
                     editor.ShowDialog();
                 }
-                else
-                {
-                    MessageBox.Show("먼저 질문을 선택해 주세요.", "선택 필요");
-                }
             };
 
-            // 각 ListBox를 폼에 추가
+            // 폼에 추가
             selectionForm.Controls.Add(lblDataStructure);
             selectionForm.Controls.Add(lblAlgorithm);
-            selectionForm.Controls.Add(lblCharacter);
-            selectionForm.Controls.Add(listBoxDataStructure);
-            selectionForm.Controls.Add(listBoxAlgorithm);
-            selectionForm.Controls.Add(listBoxCharacter);
+            selectionForm.Controls.Add(lblCharacterInterview);
+            selectionForm.Controls.Add(dataStructureListBox);
+            selectionForm.Controls.Add(algorithmListBox);
+            selectionForm.Controls.Add(characterInterviewListBox);
             selectionForm.Controls.Add(btnOpen);
-
             selectionForm.ShowDialog();
         }
+
+
 
 
 
