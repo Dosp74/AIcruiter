@@ -53,10 +53,9 @@ namespace AIcruiter
         }
 
         //선아 - mdi폼 수정 확인중
-        private void btn1_random1_Click(object sender, EventArgs e)
-        {
+        /*
             // Form3을 생성하고 부모 폼 설정
-            Form4 form4 = new Form4();
+            //Form4 form4 = new Form4();
             form4.MdiParent = this;  // Form1을 부모 폼으로 설정
 
             // 부모 폼에서 랜덤 질문 버튼의 위치 가져오기
@@ -73,13 +72,15 @@ namespace AIcruiter
 
             // 자식 폼 띄우기
             form4.Show();
-        }
+
+        } */
 
 
 
 
 
-        private Timer stopwatchTimer;  // 타이머 객체
+
+    private Timer stopwatchTimer;  // 타이머 객체
         private TimeSpan elapsedTime;
         private Label stopwatchLabel;  // 경과 시간을 표시할 레이블
 
@@ -618,8 +619,8 @@ namespace AIcruiter
         private void btnAnswer_Click(object sender, EventArgs e)
         {
             // 데이터 파일 경로 설정
-            string dataStructureFilePath = @"C:\Users\82103\Desktop\응소실_팀플\temp\AIcruiter\bin\Debug\DataStructure.txt";
-            string operatingSystemFilePath = @"C:\Users\82103\Desktop\응소실_팀플\temp\AIcruiter\bin\Debug\OS.txt";
+            string dataStructureFilePath = "DataStructure.txt";
+            string operatingSystemFilePath = "OS.txt";
 
             Form answerForm = new Form();
             answerForm.Text = "정답 확인";
