@@ -55,7 +55,7 @@ namespace AIcruiter
         
 
 
-    private Timer stopwatchTimer;  // 타이머 객체
+        private Timer stopwatchTimer;  // 타이머 객체
         private TimeSpan elapsedTime;
         private Label stopwatchLabel;  // 경과 시간을 표시할 레이블
 
@@ -464,6 +464,34 @@ namespace AIcruiter
                             }
                         }
                     }
+                }
+            };
+
+            // 각 카테고리에서 하나씩만 선택하도록 만들기
+            dataStructureListBox.SelectedIndexChanged += (s, ev) =>
+            {
+                if (dataStructureListBox.SelectedIndex >= 0)
+                {
+                    algorithmListBox.ClearSelected();
+                    characterInterviewListBox.ClearSelected();
+                }
+            };
+
+            algorithmListBox.SelectedIndexChanged += (s, ev) =>
+            {
+                if (algorithmListBox.SelectedIndex >= 0)
+                {
+                    dataStructureListBox.ClearSelected();
+                    characterInterviewListBox.ClearSelected();
+                }
+            };
+
+            characterInterviewListBox.SelectedIndexChanged += (s, ev) =>
+            {
+                if (characterInterviewListBox.SelectedIndex >= 0)
+                {
+                    dataStructureListBox.ClearSelected();
+                    algorithmListBox.ClearSelected();
                 }
             };
 
