@@ -52,32 +52,7 @@ namespace AIcruiter
             InitializeComponent();
         }
 
-        //선아 - mdi폼 수정 확인중
-        /*
-            // Form3을 생성하고 부모 폼 설정
-            //Form4 form4 = new Form4();
-            form4.MdiParent = this;  // Form1을 부모 폼으로 설정
-
-            // 부모 폼에서 랜덤 질문 버튼의 위치 가져오기
-            int btn1RandomBottom = btn1_random.Bottom;  // 버튼의 하단 위치 (버튼 위로 자식 폼 배치)
-
-            // Form3 크기 설정
-            form4.Size = new Size(500, 300);  // 자식 폼 크기 설정
-
-            // 자식 폼을 부모 폼의 중앙 아래에 위치시킴
-            form4.Location = new Point(
-                this.Left + (this.Width - form4.Width) / 2,  // 부모 폼 중앙에 위치하도록 X 좌표 설정
-                this.Top + btn1RandomBottom + 20  // 버튼 아래에 여유 공간 20px을 두고 Y 좌표 설정
-            );
-
-            // 자식 폼 띄우기
-            form4.Show();
-
-        } */
-
-
-
-
+        
 
 
     private Timer stopwatchTimer;  // 타이머 객체
@@ -651,8 +626,8 @@ namespace AIcruiter
             };
 
             // 각 카테고리별 ListBox 추가
-            ListBox dataStructureListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 70) };
-            ListBox operatingSystemListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200) };
+            ListBox dataStructureListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 70), SelectionMode = SelectionMode.One };
+            ListBox operatingSystemListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200), SelectionMode = SelectionMode.One };
 
             // 자료구조 질문 파일 경로 및 운영체제 질문 파일 경로를 통해 질문 추가
             if (File.Exists(dataStructureFilePath))
@@ -674,6 +649,23 @@ namespace AIcruiter
                     operatingSystemListBox.Items.Add(question); // 질문을 ListBox에 추가
                 }
             }
+
+            // ListBox에서 선택된 항목을 추적하여 다른 ListBox에서 선택이 취소되도록 하기
+            dataStructureListBox.SelectedIndexChanged += (s, ev) =>
+            {
+                if (dataStructureListBox.SelectedIndex >= 0)
+                {
+                    operatingSystemListBox.ClearSelected(); // 운영체제 ListBox 선택 해제
+                }
+            };
+
+            operatingSystemListBox.SelectedIndexChanged += (s, ev) =>
+            {
+                if (operatingSystemListBox.SelectedIndex >= 0)
+                {
+                    dataStructureListBox.ClearSelected(); // 자료구조 ListBox 선택 해제
+                }
+            };
 
             // 검색 기능 구현
             searchBox.TextChanged += (s, ev) =>
@@ -739,7 +731,7 @@ namespace AIcruiter
                     int selectedIdx = selectedListBox.SelectedIndex; // 선택된 질문 인덱스
 
                     // 선택된 카테고리의 해당 질문에 대한 모범 답안을 가져오기
-                    string answerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, selectedFilePath == dataStructureFilePath ? "DataStructureAnswer" : "OSAnswer", $"{selectedIdx + 1}.txt");
+                    string answerPath = selectedFilePath == dataStructureFilePath ? "DataStructure.txt" : "OS.txt";
 
                     if (!File.Exists(answerPath))
                     {
@@ -747,8 +739,26 @@ namespace AIcruiter
                         return;
                     }
 
-                    string answer = File.ReadAllText(answerPath); // 답변 파일을 읽어옴
+                    string answer = string.Empty;
 
+                    // 파일을 한 줄씩 읽고, '/'로 나누어 3번째 항목(답변)을 가져옴
+                    string[] lines = File.ReadAllLines(answerPath);
+                    if (selectedIdx >= 0 && selectedIdx < lines.Length)
+                    {
+                        string[] columns = lines[selectedIdx].Split('/');
+                        if (columns.Length >= 3)
+                        {
+                            answer = columns[2];  // 3번째 항목이 답변
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(answer))
+                    {
+                        MessageBox.Show("답변을 찾을 수 없습니다.", "오류");
+                        return;
+                    }
+
+                    // 답변을 텍스트박스에 표시
                     Form editor = new Form()
                     {
                         Text = "모범 답안 보기",
@@ -776,6 +786,10 @@ namespace AIcruiter
             answerForm.Controls.Add(btnOpen);
             answerForm.ShowDialog();
         }
+
+
+
+
 
 
 
