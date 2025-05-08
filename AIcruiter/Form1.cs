@@ -578,7 +578,6 @@ namespace AIcruiter
             selectionForm.Controls.Add(lblDataStructure);
 
             selectionForm.Controls.Add(lblOS);
-            
 
             selectionForm.Controls.Add(lblCharacterInterview);
             selectionForm.Controls.Add(dataStructureListBox);
@@ -865,6 +864,11 @@ namespace AIcruiter
                     return "Error: " + response.StatusCode;
                 }
             }
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
