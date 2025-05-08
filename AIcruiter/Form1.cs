@@ -52,9 +52,6 @@ namespace AIcruiter
             InitializeComponent();
         }
 
-        
-
-
         private Timer stopwatchTimer;  // 타이머 객체
         private TimeSpan elapsedTime;
         private Label stopwatchLabel;  // 경과 시간을 표시할 레이블
@@ -62,10 +59,15 @@ namespace AIcruiter
         // StopwatchTimer_Tick 메서드는 그대로 사용
         private void StopwatchTimer_Tick(object sender, EventArgs e)
         {
-            elapsedTime = elapsedTime.Add(TimeSpan.FromSeconds(1));
+            elapsedTime = elapsedTime.Add(TimeSpan.FromSeconds(1)); ;
             stopwatchLabel.Text = elapsedTime.ToString(@"mm\:ss");
         }
 
+        //채점 버튼 안 누르고, 모달폼 종료 시 타이머 정지 처리
+        private void modalForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            stopwatchTimer.Stop();  // 타이머 정지
+        }
 
         private void btn1_random_Click(object sender, EventArgs e)
         {
@@ -93,6 +95,7 @@ namespace AIcruiter
             modalForm.Text = "면접 질문";
             modalForm.Size = new System.Drawing.Size(500, 350); // 크기 늘림
             modalForm.StartPosition = FormStartPosition.CenterParent;
+            modalForm.FormClosed += modalForm_FormClosed;
 
             // 질문을 보여줄 라벨
             Label questionLabel = new Label();
@@ -415,7 +418,7 @@ namespace AIcruiter
                         dataStructureListBox.Items.Add($"{q.idx}. {q.question}");
                         dataStructureIndexes.Add(q.idx);
                     }
-                    else if (category == "Algorithm")
+                    else if (category == "OS")
                     {
                         algorithmListBox.Items.Add($"{q.idx}. {q.question}");
                         algorithmIndexes.Add(q.idx);
@@ -547,7 +550,8 @@ namespace AIcruiter
                         Multiline = true,
                         Text = answer,
                         Size = new Size(450, 200),
-                        Location = new Point(10, 10)
+                        Location = new Point(10, 10),
+                        TabStop = false
                     };
 
                     Button btnSave = new Button()
@@ -798,7 +802,8 @@ namespace AIcruiter
                         Multiline = true,
                         Text = answer,
                         Size = new Size(450, 200),
-                        Location = new Point(10, 10)
+                        Location = new Point(10, 10),
+                        TabStop = false
                     };
 
                     editor.Controls.Add(answerEditor);

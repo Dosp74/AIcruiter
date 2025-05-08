@@ -38,19 +38,19 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label1.Location = new System.Drawing.Point(237, 39);
+            this.label1.Location = new System.Drawing.Point(207, 31);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(342, 46);
+            this.label1.Size = new System.Drawing.Size(264, 37);
             this.label1.TabIndex = 0;
             this.label1.Text = "Al 면접관 시뮬레이터";
             // 
             // btn1_random
             // 
             this.btn1_random.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btn1_random.Location = new System.Drawing.Point(103, 133);
+            this.btn1_random.Location = new System.Drawing.Point(90, 106);
             this.btn1_random.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn1_random.Name = "btn1_random";
-            this.btn1_random.Size = new System.Drawing.Size(163, 90);
+            this.btn1_random.Size = new System.Drawing.Size(143, 72);
             this.btn1_random.TabIndex = 1;
             this.btn1_random.Text = "랜덤 질문";
             this.btn1_random.UseVisualStyleBackColor = true;
@@ -59,10 +59,10 @@
             // btn2_load
             // 
             this.btn2_load.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btn2_load.Location = new System.Drawing.Point(293, 133);
+            this.btn2_load.Location = new System.Drawing.Point(255, 106);
             this.btn2_load.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn2_load.Name = "btn2_load";
-            this.btn2_load.Size = new System.Drawing.Size(183, 90);
+            this.btn2_load.Size = new System.Drawing.Size(160, 72);
             this.btn2_load.TabIndex = 2;
             this.btn2_load.Text = "내 답변 확인";
             this.btn2_load.UseVisualStyleBackColor = true;
@@ -71,10 +71,10 @@
             // btnAnswer
             // 
             this.btnAnswer.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnAnswer.Location = new System.Drawing.Point(509, 133);
+            this.btnAnswer.Location = new System.Drawing.Point(445, 106);
             this.btnAnswer.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnAnswer.Name = "btnAnswer";
-            this.btnAnswer.Size = new System.Drawing.Size(183, 90);
+            this.btnAnswer.Size = new System.Drawing.Size(160, 72);
             this.btnAnswer.TabIndex = 3;
             this.btnAnswer.Text = "모범 답안 확인";
             this.btnAnswer.UseVisualStyleBackColor = true;
@@ -82,10 +82,10 @@
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(831, 292);
+            this.ClientSize = new System.Drawing.Size(727, 234);
             this.Controls.Add(this.btnAnswer);
             this.Controls.Add(this.btn2_load);
             this.Controls.Add(this.btn1_random);
