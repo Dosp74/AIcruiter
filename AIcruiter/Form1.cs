@@ -379,7 +379,7 @@ namespace AIcruiter
                 Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
 
-            Label lblAlgorithm = new Label()
+            Label lblOS = new Label()
             {
                 Text = "운영체제 질문",
                 Location = new Point(10, 180),
@@ -397,12 +397,12 @@ namespace AIcruiter
 
             // 각 카테고리별 ListBox 추가
             ListBox dataStructureListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 70) };
-            ListBox algorithmListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200) };
+            ListBox OSListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200) };
             ListBox characterInterviewListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 330) };
 
             // 각 카테고리별 데이터 준비
             List<int> dataStructureIndexes = new List<int>();
-            List<int> algorithmIndexes = new List<int>();
+            List<int> OSIndexes = new List<int>();
             List<int> characterInterviewIndexes = new List<int>();
 
             // 카테고리별 항목 추가
@@ -420,8 +420,8 @@ namespace AIcruiter
                     }
                     else if (category == "OS")
                     {
-                        algorithmListBox.Items.Add($"{q.idx}. {q.question}");
-                        algorithmIndexes.Add(q.idx);
+                        OSListBox.Items.Add($"{q.idx}. {q.question}");
+                        OSIndexes.Add(q.idx);
                     }
                     else if (category == "Character")
                     {
@@ -438,7 +438,7 @@ namespace AIcruiter
 
                 // 각 ListBox의 항목을 초기화하고 필터링된 항목만 추가
                 dataStructureListBox.Items.Clear();
-                algorithmListBox.Items.Clear();
+                OSListBox.Items.Clear();
                 characterInterviewListBox.Items.Clear();
 
                 foreach (var q in questions)
@@ -459,7 +459,7 @@ namespace AIcruiter
                             }
                             else if (category == "OS")
                             {
-                                algorithmListBox.Items.Add($"{q.idx}. {q.question}");
+                                OSListBox.Items.Add($"{q.idx}. {q.question}");
                             }
                             else if (category == "Character")
                             {
@@ -475,14 +475,14 @@ namespace AIcruiter
             {
                 if (dataStructureListBox.SelectedIndex >= 0)
                 {
-                    algorithmListBox.ClearSelected();
+                    OSListBox.ClearSelected();
                     characterInterviewListBox.ClearSelected();
                 }
             };
 
-            algorithmListBox.SelectedIndexChanged += (s, ev) =>
+            OSListBox.SelectedIndexChanged += (s, ev) =>
             {
-                if (algorithmListBox.SelectedIndex >= 0)
+                if (OSListBox.SelectedIndex >= 0)
                 {
                     dataStructureListBox.ClearSelected();
                     characterInterviewListBox.ClearSelected();
@@ -494,7 +494,7 @@ namespace AIcruiter
                 if (characterInterviewListBox.SelectedIndex >= 0)
                 {
                     dataStructureListBox.ClearSelected();
-                    algorithmListBox.ClearSelected();
+                    OSListBox.ClearSelected();
                 }
             };
 
@@ -513,8 +513,8 @@ namespace AIcruiter
                 // 각 카테고리에서 선택된 항목을 구분
                 if (dataStructureListBox.SelectedIndex >= 0)
                     selectedListBox = dataStructureListBox;
-                else if (algorithmListBox.SelectedIndex >= 0)
-                    selectedListBox = algorithmListBox;
+                else if (OSListBox.SelectedIndex >= 0)
+                    selectedListBox = OSListBox;
                 else if (characterInterviewListBox.SelectedIndex >= 0)
                     selectedListBox = characterInterviewListBox;
 
@@ -523,8 +523,8 @@ namespace AIcruiter
                     int selectedIdx = -1;
                     if (selectedListBox == dataStructureListBox)
                         selectedIdx = dataStructureIndexes[selectedListBox.SelectedIndex];
-                    else if (selectedListBox == algorithmListBox)
-                        selectedIdx = algorithmIndexes[selectedListBox.SelectedIndex];
+                    else if (selectedListBox == OSListBox)
+                        selectedIdx = OSIndexes[selectedListBox.SelectedIndex];
                     else if (selectedListBox == characterInterviewListBox)
                         selectedIdx = characterInterviewIndexes[selectedListBox.SelectedIndex];
 
@@ -576,10 +576,13 @@ namespace AIcruiter
 
             // 폼에 추가
             selectionForm.Controls.Add(lblDataStructure);
-            selectionForm.Controls.Add(lblAlgorithm);
+
+            selectionForm.Controls.Add(lblOS);
+            
+
             selectionForm.Controls.Add(lblCharacterInterview);
             selectionForm.Controls.Add(dataStructureListBox);
-            selectionForm.Controls.Add(algorithmListBox);
+            selectionForm.Controls.Add(OSListBox);
             selectionForm.Controls.Add(characterInterviewListBox);
             selectionForm.Controls.Add(btnOpen);
             selectionForm.ShowDialog();
