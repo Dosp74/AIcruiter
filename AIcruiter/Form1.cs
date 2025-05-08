@@ -457,7 +457,7 @@ namespace AIcruiter
                             {
                                 dataStructureListBox.Items.Add($"{q.idx}. {q.question}");
                             }
-                            else if (category == "Algorithm")
+                            else if (category == "OS")
                             {
                                 algorithmListBox.Items.Add($"{q.idx}. {q.question}");
                             }
