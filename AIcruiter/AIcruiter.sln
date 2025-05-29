@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIcruiter", "AIcruiter.csproj", "{B548F33D-E48E-42DE-AC2D-D0ABC1DAF0C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AICruiter_Server", "..\AICruiter_Server\AICruiter_Server.csproj", "{9413EFAB-FB07-42C4-9C0F-B0C473F1468E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{B548F33D-E48E-42DE-AC2D-D0ABC1DAF0C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B548F33D-E48E-42DE-AC2D-D0ABC1DAF0C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B548F33D-E48E-42DE-AC2D-D0ABC1DAF0C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9413EFAB-FB07-42C4-9C0F-B0C473F1468E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9413EFAB-FB07-42C4-9C0F-B0C473F1468E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9413EFAB-FB07-42C4-9C0F-B0C473F1468E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9413EFAB-FB07-42C4-9C0F-B0C473F1468E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,24 +8,127 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Drawing.Configuration;
-using System.Net.Http;
-using Newtonsoft.Json;
-using System.Net;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Text.RegularExpressions;
+using System.Net.Sockets;
+using System.Threading;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace AIcruiter
 {
     public partial class Form1 : Form
     {
+        public NetworkStream m_Stream;
+        public StreamReader m_Read;
+        public StreamWriter m_Write;
+        const int PORT = 7777;
+
+        private CancellationTokenSource cancellationTokenSource1;
+        private CancellationToken cancellationtoken1;
+
+        TcpClient m_Client;
+        public bool m_bConnect = false;
+
+        public void Disconnect()
+        {
+            if (!m_bConnect)
+                return;
+
+            m_bConnect = false;
+
+            m_Read?.Close();
+            m_Write?.Close();
+
+            m_Stream?.Close();
+            cancellationTokenSource1?.Cancel();
+        }
+
+        public void Connect()
+        {
+            m_Client = new TcpClient();
+
+            try
+            {
+                m_Client.Connect("127.0.0.1", PORT);    //루프백 주소
+            }
+            catch
+            {
+                m_bConnect = false;
+                return;
+            }
+            m_bConnect = true;
+            m_Stream = m_Client.GetStream();
+
+            m_Read = new StreamReader(m_Stream);
+            m_Write = new StreamWriter(m_Stream);
+
+            cancellationTokenSource1 = new CancellationTokenSource();
+            cancellationtoken1 = cancellationTokenSource1.Token;
+        }
+
+        public async Task<string> Receive(CancellationToken token)
+        {
+            try
+            {
+                if (!m_bConnect || token.IsCancellationRequested)
+                    return "";
+
+                StringBuilder sb = new StringBuilder();
+                string line;
+
+                while (!token.IsCancellationRequested)
+                {
+                    line = await m_Read.ReadLineAsync();
+
+                    if (line == null)
+                    {
+                        Disconnect();
+                        break;
+                    }
+
+                    if (line.Trim() == "[END]")
+                    {
+                        // 종료 조건 ([END] 신호)
+                        break;
+                    }
+
+                    sb.AppendLine(line);
+                }
+
+                return sb.ToString().TrimEnd(); // 마지막 개행 제거
+            }
+            catch (Exception ex)
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    MessageBox.Show("서버 응답 수신 중 오류 발생: " + ex.Message);
+                }
+                Disconnect();
+                return "";
+            }
+        }
+
+        async public Task Send(string query)
+        {
+            try
+            {
+                await m_Write.WriteLineAsync(query);
+                await m_Write.FlushAsync();
+            }
+            catch
+            {
+                MessageBox.Show("쿼리 전송에 실패했습니다.");
+            }
+        }
+
         public class Question
         {
             // 인덱스, 질문, 정답, 카테고리로 구성
             public int idx;
             public string question;
             public string answer;
-            public string category; // 카테고리 추가
+            public string category;
 
             public Question(int idx, string question, string answer, string category)
             {
@@ -35,10 +138,6 @@ namespace AIcruiter
                 this.category = category;
             }
         }
-
-        private static readonly string apiKey = Environment.GetEnvironmentVariable("OPEN_API_KEY"); // 시스템 환경 변수 설정.
-
-        private static readonly string apiEndpoint = "https://api.openai.com/v1/chat/completions";
 
         //.txt파일의 데이터를 불러올 리스트 생성
         List<Question> questions = new List<Question>();
@@ -52,7 +151,7 @@ namespace AIcruiter
             InitializeComponent();
         }
 
-        private Timer stopwatchTimer;  // 타이머 객체
+        private System.Windows.Forms.Timer stopwatchTimer;  // 타이머 객체
         private TimeSpan elapsedTime;
         private Label stopwatchLabel;  // 경과 시간을 표시할 레이블
 
@@ -84,7 +183,7 @@ namespace AIcruiter
             string answerPath = Path.Combine(folderPath, $"{category}Answer{questionIdx}.txt");
 
             // 스톱워치 초기화
-            stopwatchTimer = new Timer();
+            stopwatchTimer = new System.Windows.Forms.Timer();
             stopwatchTimer.Interval = 1000; // 1초마다 실행
             stopwatchTimer.Tick += StopwatchTimer_Tick;
 
@@ -210,11 +309,12 @@ namespace AIcruiter
                 stopwatchTimer.Stop();
                 string currentCategory = questions[rNumber].category;
 
-                // GPT에 보내는 질문을 입력합니다.
+                // 응답을 받아오는 메서드 호출
                 string query;
-
                 if (currentCategory == "Character")
-                    query = $"질문: {questions[rNumber].question}\n" +
+                {
+                    query = $"grading\n" +
+                            $"질문: {questions[rNumber].question}\n" +
                             $"답변: {answerBox.Text}\n" +
                             $"회사의 인성 면접 기준(정직성, 책임감, 협업 능력 등)에 따라 답변을 평가해줘. " +
                             $"답변이 구체적이고 진정성이 느껴지며 실제 상황을 바탕으로 한 예시가 포함되어야 높은 점수를 받을 수 있어. " +
@@ -222,23 +322,29 @@ namespace AIcruiter
                             $"점수를 부여할 때 엄격하게 판단하고 지나치게 후한 점수를 주지 마. " +
                             $"답변이 아무것도 입력되지 않았다면 점수를 부여하지마. " +
                             $"100점 만점 기준으로 채점하고, '정확성', '논리성', '표현력' 항목별 점수를 포함해 아래 형식의 정확한 JSON으로 응답해줘. 각 점수는 정수형 숫자여야 하고, '점'이라는 단어는 포함하지 마. " +
-                            $"예시:\r\n{{\r\n  \"점수\": ?,\r\n  \"정확성\": ?,\r\n  \"논리성\": ?,\r\n  \"표현력\": ?,\r\n  \"피드백\": \"(200자 이하의 구체적인 내용)\"\r\n}}";
-
+                            $"예시:\r\n{{\r\n  \"점수\": ?,\r\n  \"정확성\": ?,\r\n  \"논리성\": ?,\r\n  \"표현력\": ?,\r\n  \"피드백\": \"(200자 이하의 구체적인 내용)\"\r\n}}" + "\n[END]";
+                }
                 else
                 {
-                    query = $"질문: {questions[rNumber].question}\n" +
+                    query = $"grading\n" +
+                            $"질문: {questions[rNumber].question}\n" +
                             $"정답 키워드: {questions[rNumber].answer}\n" +
                             $"답변: {answerBox.Text}\n\n" +
                             $"답변이 정답과 다르더라도 개념 설명이 정확하다면 점수를 부여해도 돼. " +
                             $"답변이 아무것도 입력되지 않았다면 점수를 부여하지마. " +
                             $"정확성과 이해도를 고려해 100점 만점으로 채점하고, '정확성', '논리성', '표현력' 항목별 점수를 포함하여 아래 형식의 정확한 JSON으로 응답해줘. 각 점수는 정수형 숫자여야 하고, '점'이라는 단어는 포함하지 마. " +
-                            $"예시:\r\n{{\r\n  \"점수\": ?,\r\n  \"정확성\": ?,\r\n  \"논리성\": ?,\r\n  \"표현력\": ?,\r\n  \"피드백\": \"(200자 이하의 구체적인 내용)\"\r\n}}";
+                            $"예시:\r\n{{\r\n  \"점수\": ?,\r\n  \"정확성\": ?,\r\n  \"논리성\": ?,\r\n  \"표현력\": ?,\r\n  \"피드백\": \"(200자 이하의 구체적인 내용)\"\r\n}}" + "\n[END]";
                 }
-                // query = questions[rNumber].question + "에 대해서 " + questions[rNumber].answer + "라는 정답을 기준으로 " + answerBox.Text + "의 점수와 피드백을 제공해줘(200자 이하).";
 
-                // 응답을 받아오는 메서드 호출
-                string response = await GetGptResponse(query);
-                // MessageBox.Show(response);
+                Connect();
+                await Send(query);
+                string response = await Receive(cancellationtoken1);
+
+                if (string.IsNullOrWhiteSpace(response))
+                {
+                    MessageBox.Show("채점에 실패하였습니다.");
+                    return;
+                }
 
                 int score = 0, accuracy = 0, logic = 0, clarity = 0;
                 string feedbackText = response;
@@ -349,6 +455,11 @@ namespace AIcruiter
                     resultForm.Controls.Add(chart);
                 }
 
+                resultForm.FormClosing += (s2, e2) =>
+                {
+                    Disconnect();
+                };
+
                 resultForm.ShowDialog();
                 
             };
@@ -357,7 +468,6 @@ namespace AIcruiter
             // 모달창 띄우기
             modalForm.ShowDialog();
         }
-
 
         private void btn2_load_Click(object sender, EventArgs e)
         {
@@ -578,9 +688,7 @@ namespace AIcruiter
 
             // 폼에 추가
             selectionForm.Controls.Add(lblDataStructure);
-
             selectionForm.Controls.Add(lblOS);
-
             selectionForm.Controls.Add(lblCharacterInterview);
             selectionForm.Controls.Add(dataStructureListBox);
             selectionForm.Controls.Add(OSListBox);
@@ -588,11 +696,6 @@ namespace AIcruiter
             selectionForm.Controls.Add(btnOpen);
             selectionForm.ShowDialog();
         }
-
-
-
-
-
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -822,55 +925,6 @@ namespace AIcruiter
             answerForm.Controls.Add(operatingSystemListBox);
             answerForm.Controls.Add(btnOpen);
             answerForm.ShowDialog();
-        }
-
-
-
-
-
-
-
-
-
-
-        // GPT에 쿼리 보내고 응답 받아오는 함수
-        private static async Task<string> GetGptResponse(string query)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
-
-                var requestData = new
-                {
-                    model = "gpt-4-turbo", // 최신 모델 사용
-                    messages = new[]
-                    {
-            new { role = "user", content = query }
-        },
-                    max_tokens = 500
-                };
-
-                string jsonData = JsonConvert.SerializeObject(requestData);
-
-                var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await client.PostAsync(apiEndpoint, content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseContent = await response.Content.ReadAsStringAsync();
-                    dynamic jsonResponse = JsonConvert.DeserializeObject(responseContent);
-                    return jsonResponse.choices[0].message.content.ToString().Trim();
-                }
-                else
-                {
-                    return "Error: " + response.StatusCode;
-                }
-            }
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }
