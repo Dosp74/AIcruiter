@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net;
 using System.Collections;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace AICruiter_Server
 {
@@ -24,6 +25,7 @@ namespace AICruiter_Server
 
         private TcpListener m_listener;
         private Thread m_thServer;
+        Queue<TcpClient> clientList;
 
         private CancellationTokenSource cancellationTokenSource1;
         private CancellationTokenSource cancellationTokenSource2;
@@ -64,6 +66,7 @@ namespace AICruiter_Server
             {
                 if (!token.IsCancellationRequested)
                 {
+                    clientList = new Queue<TcpClient>();
                     m_listener = new TcpListener(PORT);
                     m_listener.Start();
 
@@ -73,36 +76,12 @@ namespace AICruiter_Server
                     while (m_bStop)
                     {
                         TcpClient hClient = m_listener.AcceptTcpClient();
-
-                        if (hClient.Connected)
+                        lock (clientList)
                         {
-                            m_bConnect = true;
-                            Message("클라이언트 접속");
-
-                            m_Stream = hClient.GetStream();
-                            m_Read = new StreamReader(m_Stream);
-                            m_Write = new StreamWriter(m_Stream);
-
-                            cancellationTokenSource1 = new CancellationTokenSource();
-                            cancellationtoken1 = cancellationTokenSource1.Token;
-
-                            if (m_Stream.DataAvailable)
-                            {
-                                string messageType = m_Read.ReadLine().Trim();
-                                if (messageType.Equals("grading"))
-                                {
-                                    Task.Run(() => Receive(cancellationtoken1));
-                                }
-                                else if (messageType.Equals("sharing"))
-                                {
-                                    //답변 공유 서비스 구현
-                                }
-                                else if (messageType.Equals("loading"))
-                                {
-                                    //커뮤니티 로드 서비스 구현
-                                }
-                            }
+                            clientList.Enqueue(hClient);
                         }
+
+                        Task.Run(() => TryProcessNextClient());
                     }
                 }
             }
@@ -112,6 +91,44 @@ namespace AICruiter_Server
                     Message("시작 도중에 오류 발생");
                 }
             }
+        }
+
+        private async Task TryProcessNextClient()
+        {
+            TcpClient hClient;
+            lock (clientList)
+            {
+                if (m_bConnect || clientList.Count == 0)
+                    return;
+
+                hClient = clientList.Dequeue();
+                m_bConnect = true;
+                Message("클라이언트 접속");
+            }
+            
+            m_Stream = hClient.GetStream();
+            m_Read = new StreamReader(m_Stream);
+            m_Write = new StreamWriter(m_Stream);
+
+            cancellationTokenSource1 = new CancellationTokenSource();
+            cancellationtoken1 = cancellationTokenSource1.Token;
+
+            string messageType = await m_Read.ReadLineAsync();
+            if (messageType.Trim().Equals("grading"))
+            {
+                await Receive(cancellationtoken1);
+            }
+            else if (messageType.Trim().Equals("sharing"))
+            {
+                //답변 공유 서비스 구현
+            }
+            else if (messageType.Trim().Equals("loading"))
+            {
+                //커뮤니티 로드 서비스 구현
+            }
+
+            m_bConnect = false;
+            await TryProcessNextClient();
         }
 
         public void ServerStop()

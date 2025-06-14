@@ -16,6 +16,7 @@ using AIcruiter.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Collections;
+using Microsoft.EntityFrameworkCore;
 
 namespace AIcruiter
 {
@@ -83,15 +84,9 @@ namespace AIcruiter
                 {
                     line = await m_Read.ReadLineAsync();
 
-                    if (line == null)
+                    if (line == null || line.Trim() == "[END]")
                     {
                         Disconnect();
-                        break;
-                    }
-
-                    if (line.Trim() == "[END]")
-                    {
-                        // 종료 조건 ([END] 신호)
                         break;
                     }
 
@@ -129,6 +124,56 @@ namespace AIcruiter
             InitializeComponent();
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            using (var db = new AppDbContext())
+            {
+                db.Database.Migrate();
+
+                // DB에 질문이 없을 경우 txt 파일에서 초기 로딩
+                if (!db.Questions.Any())
+                {
+                    //.txt파일 위치는 \AIcruiter\bin\Debug 폴더
+                    var files = new Dictionary<string, string>
+                    {
+                        // key는 파일 이름, value는 카테고리로, 각 파일이 어떤 카테고리에 속하는지를 매핑
+                        { "DataStructure.txt", "DataStructure" },
+                        { "OS.txt", "OS" },
+                        { "Character.txt", "Character" },
+                    };
+
+                    foreach (var kvp in files)
+                    {
+                        string path = kvp.Key;
+                        string category = kvp.Value;
+
+                        if (File.Exists(path))
+                        {
+                            // 줄 단위로 하여 질문을 리스트에 추가
+                            foreach (var line in File.ReadAllLines(path))
+                            {
+                                string[] columns = line.Split('/');
+
+                                int idx = int.Parse(columns[0]);
+                                string question = columns[1];
+                                string answer = columns.Length > 2 ? columns[2] : null; // 인성 질문은 정답 키워드가 없음
+
+                                db.Questions.Add(new Question
+                                {
+                                    Id = idx,
+                                    Text = question,
+                                    Answer = answer,
+                                    Category = category
+                                });
+                            }
+                        }
+                    }
+
+                    db.SaveChanges();
+                }
+            }
+        }
+
         private System.Windows.Forms.Timer stopwatchTimer;  // 타이머 객체
         private TimeSpan elapsedTime;
         private Label stopwatchLabel;  // 경과 시간을 표시할 레이블
@@ -158,7 +203,6 @@ namespace AIcruiter
                 if (totalCount == 0)
                 {
                     MessageBox.Show("등록된 질문이 없습니다.");
-
                     return;
                 }
 
@@ -179,7 +223,6 @@ namespace AIcruiter
                 stopwatchTimer = new System.Windows.Forms.Timer();
                 stopwatchTimer.Interval = 1000; // 1초마다 실행
                 stopwatchTimer.Tick += StopwatchTimer_Tick;
-
                 elapsedTime = TimeSpan.Zero;
 
                 // 모달창 생성
@@ -235,7 +278,6 @@ namespace AIcruiter
                     if (string.IsNullOrWhiteSpace(userAnswer))
                     {
                         MessageBox.Show("답변을 입력해주세요.");
-
                         return;
                     }
 
@@ -277,7 +319,6 @@ namespace AIcruiter
                     MessageBox.Show("답변이 저장되었습니다.", "저장 완료");
                     modalForm.Close();
                 };
-
                 modalForm.Controls.Add(saveButton);
 
                 // 스톱워치 타이머를 시작
@@ -290,7 +331,6 @@ namespace AIcruiter
                     Size = new Size(200, 30),
                     Text = "00:00"
                 };
-
                 modalForm.Controls.Add(stopwatchLabel);
 
                 // 채점 버튼 추가
@@ -307,7 +347,6 @@ namespace AIcruiter
 
                     // 응답을 받아오는 메서드 호출
                     string query;
-
                     if (question.Category == "Character")
                     {
                         query = $"grading\n" +
@@ -344,7 +383,7 @@ namespace AIcruiter
                     }
 
                     int score = 0, accuracy = 0, logic = 0, clarity = 0;
-                    string feedbackText = response;
+                    string feedbackText = null;
 
                     try
                     {
@@ -404,18 +443,6 @@ namespace AIcruiter
                     };
                     resultForm.Controls.Add(resultLabel);
 
-                    // 점수를 프로그레스 바로 시각화
-                    ProgressBar progressBar = new ProgressBar()
-                    {
-                        Value = score,
-                        Maximum = 100,
-                        Minimum = 0,
-                        Size = new Size(300, 25),
-                        Location = new Point(30, 70),
-                        Style = ProgressBarStyle.Continuous
-                    };
-                    resultForm.Controls.Add(progressBar);
-
                     // 상세 피드백
                     Button detailButton = new Button()
                     {
@@ -458,7 +485,6 @@ namespace AIcruiter
                     };
 
                     resultForm.ShowDialog();
-
                 };
                 modalForm.Controls.Add(gradeButton);
 
@@ -676,57 +702,6 @@ namespace AIcruiter
                 selectionForm.Controls.Add(btnOpen);
                 selectionForm.ShowDialog();
             }
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            using (var db = new AppDbContext())
-            {
-                // DB에 질문이 없을 경우 txt 파일에서 초기 로딩
-                if (!db.Questions.Any())
-                {
-                    //.txt파일 위치는 \AIcruiter\bin\Debug 폴더
-                    var files = new Dictionary<string, string>
-                    {
-                        // key는 파일 이름, value는 카테고리로, 각 파일이 어떤 카테고리에 속하는지를 매핑
-                        { "DataStructure.txt", "DataStructure" },
-                        { "OS.txt", "OS" },
-                        { "Character.txt", "Character" },
-                    };
-
-                    foreach (var kvp in files)
-                    {
-                        string path = kvp.Key;
-                        string category = kvp.Value;
-
-                        if (File.Exists(path))
-                        {
-                            // 줄 단위로 하여 질문을 리스트에 추가
-                            foreach (var line in File.ReadAllLines(path))
-                            {
-                                string[] columns = line.Split('/');
-
-                                int idx = int.Parse(columns[0]);
-                                string question = columns[1];
-                                string answer = columns.Length > 2 ? columns[2] : null; // 인성 질문은 정답 키워드가 없음
-
-                                db.Questions.Add(new Question
-                                {
-                                    Id = idx,
-                                    Text = question,
-                                    Answer = answer,
-                                    Category = category
-                                });
-                            }
-                        }
-                    }
-
-                    db.SaveChanges();
-                }
-            }
-
-            //바탕색 기본색으로 변경(MDI설정으로 인해 회색으로 설정되어 있음)
-            this.Controls[this.Controls.Count - 1].BackColor = SystemColors.Control;
         }
 
         private void btnAnswer_Click(object sender, EventArgs e)
