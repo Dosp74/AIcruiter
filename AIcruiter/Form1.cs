@@ -17,7 +17,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Collections;
 using Microsoft.EntityFrameworkCore;
-using AICruiter_Server.Models;
 
 namespace AIcruiter
 {
@@ -127,6 +126,15 @@ namespace AIcruiter
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            btn1_random.FlatStyle = FlatStyle.Flat;
+            btn1_random.FlatAppearance.BorderSize = 0;
+            btnAnswer.FlatStyle = FlatStyle.Flat;
+            btnAnswer.FlatAppearance.BorderSize = 0;
+            btn2_load.FlatStyle = FlatStyle.Flat;
+            btn2_load.FlatAppearance.BorderSize = 0;
+            btnSharedAnswers.FlatStyle = FlatStyle.Flat;
+            btnSharedAnswers.FlatAppearance.BorderSize = 0;
+
             using (var db = new AppDbContext())
             {
                 db.Database.Migrate();
@@ -229,7 +237,8 @@ namespace AIcruiter
                 // 모달창 생성
                 Form modalForm = new Form();
                 modalForm.Text = "면접 질문";
-                modalForm.Size = new System.Drawing.Size(500, 350); // 크기 늘림
+                modalForm.Size = new System.Drawing.Size(510, 350); // 크기 늘림
+                modalForm.BackColor = Color.FromArgb(10, 10, 16);
                 modalForm.StartPosition = FormStartPosition.CenterParent;
                 modalForm.FormClosed += modalForm_FormClosed;
 
@@ -239,6 +248,8 @@ namespace AIcruiter
                 questionLabel.AutoSize = true;
                 questionLabel.Location = new System.Drawing.Point(20, 20);
                 questionLabel.MaximumSize = new System.Drawing.Size(450, 0); // 줄바꿈 설정
+                questionLabel.ForeColor = System.Drawing.Color.White;
+                questionLabel.Font = new Font("맑은 고딕", 11, FontStyle.Bold);
                 modalForm.Controls.Add(questionLabel);
 
                 // 텍스트박스 (사용자 답변 입력)
@@ -253,10 +264,15 @@ namespace AIcruiter
                 {
                     Button btnShowPrevious = new Button
                     {
-                        Text = "이전 답변 보기",
-                        Location = new Point(110, 200),
-                        Size = new Size(120, 30)
+                        Text = "이전 답변",
+                        Location = new Point(130, 200),
+                        Size = new Size(90, 40),
+                        ForeColor = System.Drawing.Color.White,
+                        Font = new Font("맑은 고딕", 11, FontStyle.Bold),
+                        BackColor = Color.FromArgb(27, 28, 34),
                     };
+                    btnShowPrevious.FlatStyle = FlatStyle.Flat;
+                    btnShowPrevious.FlatAppearance.BorderSize = 0;
 
                     btnShowPrevious.Click += (s, ev) =>
                     {
@@ -269,8 +285,13 @@ namespace AIcruiter
                 // 저장 버튼
                 Button saveButton = new Button();
                 saveButton.Text = "저장하기";
+                saveButton.ForeColor = System.Drawing.Color.White;
+                saveButton.Font = new Font("맑은 고딕", 11, FontStyle.Bold);
+                saveButton.BackColor = Color.FromArgb(27, 28, 34);
+                saveButton.FlatStyle = FlatStyle.Flat;
+                saveButton.FlatAppearance.BorderSize = 0;
                 saveButton.Location = new System.Drawing.Point(20, 200);
-                saveButton.Size = new System.Drawing.Size(80, 30);
+                saveButton.Size = new System.Drawing.Size(90, 40);
 
                 saveButton.Click += (s, ev) =>
                 {
@@ -328,17 +349,24 @@ namespace AIcruiter
                 // 스톱워치 시간을 표시할 라벨
                 stopwatchLabel = new Label()
                 {
-                    Location = new Point(20, 240),
+                    Location = new Point(20, 250),
                     Size = new Size(200, 30),
-                    Text = "00:00"
+                    Text = "00:00",
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold),
+                    ForeColor = Color.White
                 };
                 modalForm.Controls.Add(stopwatchLabel);
 
                 // 채점 버튼 추가
                 Button gradeButton = new Button();
                 gradeButton.Text = "채점";
-                gradeButton.Location = new System.Drawing.Point(390, 200);
-                gradeButton.Size = new System.Drawing.Size(80, 30);
+                gradeButton.Location = new System.Drawing.Point(380, 200);
+                gradeButton.Size = new System.Drawing.Size(90, 40);
+                gradeButton.ForeColor = System.Drawing.Color.White;
+                gradeButton.Font = new Font("맑은 고딕", 11, FontStyle.Bold);
+                gradeButton.BackColor = Color.FromArgb(27, 28, 34);
+                gradeButton.FlatStyle = FlatStyle.Flat;
+                gradeButton.FlatAppearance.BorderSize = 0;
 
                 gradeButton.Click += async (s, ev) =>
                 {
@@ -546,44 +574,57 @@ namespace AIcruiter
             {
                 Form selectionForm = new Form();
                 selectionForm.Text = "답변 선택";
-                selectionForm.Size = new Size(400, 600);
+                selectionForm.Size = new Size(450, 630);
+                selectionForm.BackColor = Color.FromArgb(27, 28, 34);
                 selectionForm.StartPosition = FormStartPosition.CenterParent;
+
+                Label lblSearch = new Label()
+                {
+                    Text = "검색",
+                    Location = new Point(10, 10),
+                    Size = new Size(360, 20),
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
+                };
 
                 // 검색용 텍스트박스 추가
                 TextBox searchBox = new TextBox();
                 searchBox.Size = new Size(360, 30);
-                searchBox.Location = new Point(10, 10);
+                searchBox.Location = new Point(50, 10);
                 selectionForm.Controls.Add(searchBox);
 
                 // 각 카테고리별 제목 라벨 추가
                 Label lblDataStructure = new Label()
                 {
-                    Text = "자료구조 질문",
-                    Location = new Point(10, 50),
+                    Text = "자료구조",
+                    Location = new Point(10, 60),
                     Size = new Size(360, 20),
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
                 Label lblOS = new Label()
                 {
-                    Text = "운영체제 질문",
-                    Location = new Point(10, 180),
+                    Text = "운영체제",
+                    Location = new Point(10, 220),
                     Size = new Size(360, 20),
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
                 Label lblCharacterInterview = new Label()
                 {
-                    Text = "인성 면접 질문",
-                    Location = new Point(10, 310),
+                    Text = "인성",
+                    Location = new Point(10, 380),
                     Size = new Size(360, 20),
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
                 // 각 카테고리별 ListBox 추가
-                ListBox dataStructureListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 70) };
-                ListBox OSListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200) };
-                ListBox characterInterviewListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 330) };
+                ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 90) };
+                ListBox OSListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 250) };
+                ListBox characterInterviewListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 410) };
 
                 // 각 카테고리별 데이터 준비
                 Dictionary<ListBox, List<int>> listMap = new Dictionary<ListBox, List<int>>
@@ -680,9 +721,14 @@ namespace AIcruiter
                 Button btnOpen = new Button()
                 {
                     Text = "보기",
-                    Location = new Point(290, 460),  // Y 값 조정
-                    Size = new Size(80, 30)
+                    Location = new Point(330, 540),  // Y 값 조정
+                    Size = new Size(80, 30),
+                    ForeColor = System.Drawing.Color.Black,
+                    BackColor = Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
+                btnOpen.FlatStyle = FlatStyle.Flat;
+                btnOpen.FlatAppearance.BorderSize = 0;
 
                 btnOpen.Click += (s, ev) =>
                 {
@@ -707,7 +753,17 @@ namespace AIcruiter
                     Form editor = new Form
                     {
                         Text = "답변 수정",
-                        Size = new Size(500, 350)
+                        Size = new Size(500, 350),
+                        BackColor = Color.FromArgb(27, 28, 34)
+                };
+
+                    Label lblmyAnswer = new Label()
+                    {
+                        Text = "나의 답변",
+                        Location = new Point(10, 10),
+                        Size = new Size(360, 20),
+                        ForeColor = System.Drawing.Color.White,
+                        Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                     };
 
                     TextBox answerEditor = new TextBox
@@ -715,16 +771,20 @@ namespace AIcruiter
                         Multiline = true,
                         Text = answer.AnswerContent,
                         Size = new Size(450, 200),
-                        Location = new Point(10, 10),
+                        Location = new Point(10, 40),
                         TabStop = false
                     };
 
                     Button btnSave = new Button
                     {
                         Text = "저장",
-                        Location = new Point(360, 220),
-                        Size = new Size(100, 30)
+                        Location = new Point(360, 250),
+                        Size = new Size(100, 30),
+                        Font = new Font("맑은 고딕", 10, FontStyle.Bold),
+                        BackColor = Color.White
                     };
+                    btnSave.FlatStyle = FlatStyle.Flat;
+                    btnSave.FlatAppearance.BorderSize = 0;
 
                     btnSave.Click += (se, ee) =>
                     {
@@ -736,10 +796,12 @@ namespace AIcruiter
 
                     editor.Controls.Add(answerEditor);
                     editor.Controls.Add(btnSave);
+                    editor.Controls.Add(lblmyAnswer);
                     editor.ShowDialog();
                 };
 
                 // 폼에 추가
+                selectionForm.Controls.Add(lblSearch);
                 selectionForm.Controls.Add(lblDataStructure);
                 selectionForm.Controls.Add(lblOS);
                 selectionForm.Controls.Add(lblCharacterInterview);
@@ -747,6 +809,7 @@ namespace AIcruiter
                 selectionForm.Controls.Add(OSListBox);
                 selectionForm.Controls.Add(characterInterviewListBox);
                 selectionForm.Controls.Add(btnOpen);
+
                 selectionForm.ShowDialog();
             }
         }
@@ -757,35 +820,48 @@ namespace AIcruiter
             {
                 Form answerForm = new Form();
                 answerForm.Text = "정답 확인";
-                answerForm.Size = new Size(500, 600);
+                answerForm.Size = new Size(450, 600);
                 answerForm.StartPosition = FormStartPosition.CenterParent;
+                answerForm.BackColor = Color.FromArgb(27, 28, 34);
+
 
                 // 검색용 텍스트박스 추가
                 TextBox searchBox = new TextBox();
                 searchBox.Size = new Size(360, 30);
-                searchBox.Location = new Point(10, 10);
+                searchBox.Location = new Point(50, 10);
                 answerForm.Controls.Add(searchBox);
+
+                Label lblSearch = new Label()
+                {
+                    Text = "검색",
+                    Location = new Point(10, 10),
+                    Size = new Size(360, 20),
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
+                };
 
                 // 각 카테고리별 제목 라벨 추가
                 Label lblDataStructure = new Label()
                 {
-                    Text = "자료구조 질문",
-                    Location = new Point(10, 50),
+                    Text = "자료구조",
+                    Location = new Point(10, 60),
                     Size = new Size(360, 20),
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
                 Label lblOperatingSystem = new Label()
                 {
-                    Text = "운영체제 질문",
-                    Location = new Point(10, 180),
+                    Text = "운영체제",
+                    Location = new Point(10, 230),
                     Size = new Size(360, 20),
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
                 // 각 카테고리별 ListBox 추가
-                ListBox dataStructureListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 70), SelectionMode = SelectionMode.One };
-                ListBox operatingSystemListBox = new ListBox() { Size = new Size(360, 120), Location = new Point(10, 200), SelectionMode = SelectionMode.One };
+                ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 90), SelectionMode = SelectionMode.One };
+                ListBox operatingSystemListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 260), SelectionMode = SelectionMode.One };
 
                 // 카테고리별 데이터
                 var dsQuestions = db.Questions.Where(q => q.Category == "DataStructure").ToList();
@@ -823,9 +899,13 @@ namespace AIcruiter
                 Button btnOpen = new Button()
                 {
                     Text = "보기",
-                    Location = new Point(290, 460),  // Y 값 조정
-                    Size = new Size(80, 30)
+                    Location = new Point(330, 390),  // Y 값 조정
+                    Size = new Size(80, 30),
+                    Font = new Font("맑은 고딕", 10, FontStyle.Bold),
+                    BackColor = Color.White
                 };
+                btnOpen.FlatStyle = FlatStyle.Flat;
+                btnOpen.FlatAppearance.BorderSize = 0;
 
                 btnOpen.Click += (s, ev) =>
                 {
@@ -847,7 +927,17 @@ namespace AIcruiter
                     Form editor = new Form
                     {
                         Text = "모범 답안 보기",
-                        Size = new Size(500, 350)
+                        Size = new Size(500, 350),
+                        BackColor = Color.FromArgb(27, 28, 34)
+                    };
+
+                    Label lblAnswer = new Label()
+                    {
+                        Text = "모범 답안",
+                        Location = new Point(10, 10),
+                        Size = new Size(360, 20),
+                        ForeColor = System.Drawing.Color.White,
+                        Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                     };
 
                     TextBox answerEditor = new TextBox
@@ -855,15 +945,18 @@ namespace AIcruiter
                         Multiline = true,
                         Text = selected.Answer,
                         Size = new Size(450, 200),
-                        Location = new Point(10, 10),
+                        Location = new Point(10, 40),
+                        ReadOnly = true,
                         TabStop = false
                     };
 
+                    editor.Controls.Add(lblAnswer);
                     editor.Controls.Add(answerEditor);
                     editor.ShowDialog();
                 };
 
                 // 폼에 추가
+                answerForm.Controls.Add(lblSearch);
                 answerForm.Controls.Add(lblDataStructure);
                 answerForm.Controls.Add(lblOperatingSystem);
                 answerForm.Controls.Add(dataStructureListBox);
@@ -876,6 +969,12 @@ namespace AIcruiter
         private async void btnSharedAnswers_Click(object sender, EventArgs e)
         {
             Connect();
+            if (!m_bConnect)
+            {
+                MessageBox.Show("서버 연결 실패");
+                return;
+            }
+
             await Send("loading\n[END]");
             string jsonResponse = await Receive(cancellationtoken1);
             Disconnect();

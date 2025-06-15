@@ -6,13 +6,10 @@ using System.Net.Sockets;
 using System.Threading;
 using System.IO;
 using System.Net.Http;
-using System.Net;
-using System.Collections;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using AICruiter_Server.Models;
-using AIcruiter;
 using Microsoft.EntityFrameworkCore;
+using AICruiter_Server.Models;
 using System.Linq;
 
 namespace AICruiter_Server
@@ -48,7 +45,7 @@ namespace AICruiter_Server
         {
             this.Invoke(new MethodInvoker(delegate ()
             {
-                txtLog.AppendText(msg + "\r\n");
+                txtLog.AppendText(DateTime.Now.ToString("[HH:mm:ss] ") + msg + "\r\n");
                 txtLog.Focus();
                 txtLog.ScrollToCaret();
             }));
@@ -124,6 +121,8 @@ namespace AICruiter_Server
             }
             else if (messageType.Trim().Equals("sharing"))
             {
+                Message("공유 내용 저장");
+
                 string line;
                 Dictionary<string, string> fields = new Dictionary<string, string>();
 
@@ -146,7 +145,7 @@ namespace AICruiter_Server
                     string answer = fields["Answer"];
                     DateTime submittedAt = DateTime.Parse(fields["SubmittedAt"]);
 
-                    using (var db = new AIcruiter.AppDbContext())
+                    using (var db = new AppDbContext())
                     {
                         db.SharedAnswers.Add(new SharedAnswer
                         {
@@ -169,9 +168,14 @@ namespace AICruiter_Server
 
                     await Send($"공유 저장 실패: {errorMessage}\n[END]");
                 }
+                finally
+                {
+                    Disconnect();
+                }
             }
             else if (messageType.Trim().Equals("loading"))
             {
+                Message("공유 내용 로드");
                 try
                 {
                     using (var db = new AppDbContext())
@@ -195,6 +199,10 @@ namespace AICruiter_Server
                 catch (Exception ex)
                 {
                     await Send($"공유 답변 로딩 실패: {ex.Message}\n[END]");
+                }
+                finally
+                {
+                    Disconnect();
                 }
             }
 
@@ -258,8 +266,7 @@ namespace AICruiter_Server
 
                 if (!string.IsNullOrWhiteSpace(query))
                 {
-                    Message(query);
-                    Message("GPT 전송 중");
+                    Message("GPT 서비스 처리 중");
                     string response = await GetGptResponse(query);
                     await Send(response + "\n[END]");
                 }
@@ -283,8 +290,6 @@ namespace AICruiter_Server
             {
                 await m_Write.WriteLineAsync(response);
                 await m_Write.FlushAsync();
-
-                Message(response);
             }
             catch
             {
@@ -348,6 +353,21 @@ namespace AICruiter_Server
                     return "Error: " + response.StatusCode;
                 }
             }
+        }
+
+        private void Server_Load(object sender, EventArgs e)
+        {
+            using (var db = new AppDbContext())
+            {
+                db.Database.Migrate();
+            }
+
+            btnServer.FlatStyle = FlatStyle.Flat;
+            btnServer.FlatAppearance.BorderSize = 0;
+            btnExit.FlatStyle = FlatStyle.Flat;
+            btnExit.FlatAppearance.BorderSize = 0;
+            btnCommunity.FlatStyle = FlatStyle.Flat;
+            btnCommunity.FlatAppearance.BorderSize = 0;
         }
     }
 }

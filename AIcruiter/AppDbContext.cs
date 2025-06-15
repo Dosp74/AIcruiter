@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AIcruiter.Models;
-using AICruiter_Server.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIcruiter
@@ -13,13 +12,12 @@ namespace AIcruiter
     {
         public DbSet<Question> Questions { get; set; }
         public DbSet<UserAnswer> UserAnswers { get; set; }
-        public DbSet<SharedAnswer> SharedAnswers { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlite("Data Source=shared.db");
+                optionsBuilder.UseSqlite("Data Source=AICruiter.db");
             }
         }
 

@@ -163,15 +163,6 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\20250604170350_InitFinal.cs" />
-    <Compile Include="Migrations\20250604170350_InitFinal.Designer.cs">
-      <DependentUpon>20250604170350_InitFinal.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\20250615032815_AddSharedAnswer.cs" />
-    <Compile Include="Migrations\20250615032815_AddSharedAnswer.Designer.cs">
-      <DependentUpon>20250615032815_AddSharedAnswer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\AppDbContextModelSnapshot.cs" />
     <Compile Include="Models\Question.cs" />
     <Compile Include="Models\SharedAnswer.cs" />
     <Compile Include="Models\UserAnswer.cs" />
@@ -203,7 +194,9 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

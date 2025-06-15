@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace AIcruiter.Models
+namespace AICruiter_Server.Models
 {
     public class SharedAnswer
     {
