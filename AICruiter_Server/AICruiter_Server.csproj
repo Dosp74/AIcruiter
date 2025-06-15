@@ -162,6 +162,11 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\20250615121942_Init.cs" />
+    <Compile Include="Migrations\20250615121942_Init.Designer.cs">
+      <DependentUpon>20250615121942_Init.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\AppDbContextModelSnapshot.cs" />
     <Compile Include="Models\SharedAnswer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -197,9 +202,7 @@
       <Name>AIcruiter</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
