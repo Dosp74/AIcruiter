@@ -10,6 +10,10 @@ using System.Net;
 using System.Collections;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using AICruiter_Server.Models;
+using AIcruiter;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace AICruiter_Server
 {
@@ -120,11 +124,78 @@ namespace AICruiter_Server
             }
             else if (messageType.Trim().Equals("sharing"))
             {
-                //답변 공유 서비스 구현
+                string line;
+                Dictionary<string, string> fields = new Dictionary<string, string>();
+
+                while ((line = await m_Read.ReadLineAsync()) != null && line.Trim() != "[END]")
+                {
+                    int colonIndex = line.IndexOf(':');
+                    if (colonIndex > 0)
+                    {
+                        string key = line.Substring(0, colonIndex).Trim();
+                        string value = line.Substring(colonIndex + 1).Trim();
+                        fields[key] = value;
+                    }
+                }
+
+                try
+                {
+                    int questionId = int.Parse(fields["QuestionId"]);
+                    string userId = fields["UserId"];
+                    int score = int.Parse(fields["Score"]);
+                    string answer = fields["Answer"];
+                    DateTime submittedAt = DateTime.Parse(fields["SubmittedAt"]);
+
+                    using (var db = new AIcruiter.AppDbContext())
+                    {
+                        db.SharedAnswers.Add(new SharedAnswer
+                        {
+                            QuestionId = questionId,
+                            UserId = userId,
+                            Score = score,
+                            AnswerContent = answer,
+                            SubmittedAt = submittedAt
+                        });
+                        db.SaveChanges();
+                    }
+
+                    await Send("공유 저장 완료\n[END]");
+                }
+                catch (Exception ex)
+                {
+                    string errorMessage = ex.Message;
+                    if (ex.InnerException != null)
+                        errorMessage += "\nInner: " + ex.InnerException.Message;
+
+                    await Send($"공유 저장 실패: {errorMessage}\n[END]");
+                }
             }
             else if (messageType.Trim().Equals("loading"))
             {
-                //커뮤니티 로드 서비스 구현
+                try
+                {
+                    using (var db = new AppDbContext())
+                    {
+                        var list = db.SharedAnswers
+                                     .OrderByDescending(a => a.SubmittedAt)
+                                     .Select(a => new
+                                     {
+                                         a.QuestionId,
+                                         a.UserId,
+                                         a.Score,
+                                         a.AnswerContent,
+                                         SubmittedAt = a.SubmittedAt.ToString("yyyy-MM-dd HH:mm")
+                                     })
+                                     .ToList();
+
+                        string json = JsonConvert.SerializeObject(list, Formatting.Indented);
+                        await Send(json + "\n[END]");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Send($"공유 답변 로딩 실패: {ex.Message}\n[END]");
+                }
             }
 
             m_bConnect = false;
@@ -237,6 +308,10 @@ namespace AICruiter_Server
             {
                 ServerStop();
                 btnServer.Text = "서버 켜기";
+            }
+            using (var db = new AppDbContext())
+            {
+                db.Database.Migrate();  // 자동으로 SharedAnswers 테이블 생성
             }
         }
 

@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Collections;
 using Microsoft.EntityFrameworkCore;
+using AICruiter_Server.Models;
 
 namespace AIcruiter
 {
@@ -317,7 +318,7 @@ namespace AIcruiter
                     db.SaveChanges();
 
                     MessageBox.Show("답변이 저장되었습니다.", "저장 완료");
-                    modalForm.Close();
+                    // modalForm.Close();
                 };
                 modalForm.Controls.Add(saveButton);
 
@@ -338,7 +339,6 @@ namespace AIcruiter
                 gradeButton.Text = "채점";
                 gradeButton.Location = new System.Drawing.Point(390, 200);
                 gradeButton.Size = new System.Drawing.Size(80, 30);
-
 
                 gradeButton.Click += async (s, ev) =>
                 {
@@ -478,6 +478,53 @@ namespace AIcruiter
                         chart.Series.Add(series);
                         resultForm.Controls.Add(chart);
                     }
+
+                    // 답변 공유 버튼
+                    Button btnShare = new Button()
+                    {
+                        Text = "답변 공유",
+                        Size = new Size(100, 30),
+                        Location = new Point(250, 110)
+                    };
+
+                    btnShare.Click += async (s3, e3) =>
+                    {
+                        string userId = Environment.UserName; // 윈도우 사용자 이름
+                        //string userId = "testuser1";
+                        string userAnswer = answerBox.Text.Trim();
+
+                        if (string.IsNullOrWhiteSpace(userAnswer))
+                        {
+                            MessageBox.Show("답변이 비어 있습니다.", "오류");
+                            return;
+                        }
+
+                        // 공유 메시지
+                        string shareMessage =
+                            $"sharing\n" +
+                            $"QuestionId: {question.Id}\n" +
+                            $"UserId: {userId}\n" +
+                            $"Score: {score}\n" +
+                            $"Answer: {userAnswer}\n" +
+                            $"SubmittedAt: {DateTime.Now:yyyy-MM-dd HH:mm}\n" +
+                            $"[END]";
+
+                        // 서버 전송
+                        try
+                        {
+                            Connect();
+                            await Send(shareMessage);
+                            await Receive(cancellationtoken1);
+                            Disconnect();
+                        }
+                        catch (Exception)
+                        {
+                            MessageBox.Show("공유 중 오류 발생", "실패");
+                            return;
+                        }
+                    };
+
+                    resultForm.Controls.Add(btnShare);
 
                     resultForm.FormClosing += (s2, e2) =>
                     {
@@ -824,6 +871,106 @@ namespace AIcruiter
                 answerForm.Controls.Add(btnOpen);
                 answerForm.ShowDialog();
             }
+        }
+
+        private async void btnSharedAnswers_Click(object sender, EventArgs e)
+        {
+            Connect();
+            await Send("loading\n[END]");
+            string jsonResponse = await Receive(cancellationtoken1);
+            Disconnect();
+
+            if (jsonResponse.StartsWith("공유 답변 로딩 실패"))
+            {
+                MessageBox.Show("공유 답변 로딩 실패.\n" + jsonResponse, "실패");
+                return;
+            }
+
+            List<SharedAnswer> sharedList = JsonConvert.DeserializeObject<List<SharedAnswer>>(jsonResponse);
+
+            if (sharedList.Count == 0)
+            {
+                MessageBox.Show("공유된 답변이 없습니다.");
+                return;
+            }
+
+            // 질문별 그룹핑
+            var grouped = sharedList.GroupBy(sa => sa.QuestionId)
+                                    .OrderBy(g => g.Key);
+
+            Form sharedForm = new Form()
+            {
+                Text = "공유 답변 확인",
+                Size = new Size(600, 500),
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            ListBox questionListBox = new ListBox()
+            {
+                Location = new Point(10, 10),
+                Size = new Size(550, 150)
+            };
+
+            Dictionary<int, List<SharedAnswer>> answerMap = new Dictionary<int, List<SharedAnswer>>();
+
+            foreach (var group in grouped)
+            {
+                var q = group.First();
+                using (var db = new AppDbContext())
+                {
+                    var question = db.Questions.FirstOrDefault(qq => qq.Id == q.QuestionId);
+                    if (question != null)
+                        questionListBox.Items.Add($"{q.QuestionId}. {question.Text}");
+                    else
+                        questionListBox.Items.Add($"{q.QuestionId}. (알 수 없는 질문)");
+
+                    answerMap[q.QuestionId] = group.ToList();
+                }
+            }
+
+            ListBox answerListBox = new ListBox()
+            {
+                Location = new Point(10, 180),
+                Size = new Size(550, 200)
+            };
+
+            Button btnView = new Button()
+            {
+                Text = "보기",
+                Location = new Point(480, 390),
+                Size = new Size(80, 30)
+            };
+
+            questionListBox.SelectedIndexChanged += (s, ev) =>
+            {
+                answerListBox.Items.Clear();
+                int idx = questionListBox.SelectedIndex;
+                if (idx < 0) return;
+
+                var questionId = answerMap.Keys.ElementAt(idx);
+                foreach (var ans in answerMap[questionId])
+                {
+                    answerListBox.Items.Add($"{ans.UserId} / {ans.Score}점 / {ans.SubmittedAt}");
+                }
+            };
+
+            btnView.Click += (s, ev) =>
+            {
+                int qIdx = questionListBox.SelectedIndex;
+                int aIdx = answerListBox.SelectedIndex;
+
+                if (qIdx < 0 || aIdx < 0) return;
+
+                int questionId = answerMap.Keys.ElementAt(qIdx);
+                var answer = answerMap[questionId][aIdx];
+
+                MessageBox.Show(answer.AnswerContent, $"공유 답변 - {answer.UserId}");
+            };
+
+            sharedForm.Controls.Add(questionListBox);
+            sharedForm.Controls.Add(answerListBox);
+            sharedForm.Controls.Add(btnView);
+            sharedForm.ShowDialog();
         }
     }
 }
