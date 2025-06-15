@@ -137,7 +137,6 @@ namespace AIcruiter
 
             using (var db = new AppDbContext())
             {
-                db.Database.EnsureCreated();
                 db.Database.Migrate();
 
                 // DB에 질문이 없을 경우 txt 파일에서 초기 로딩
