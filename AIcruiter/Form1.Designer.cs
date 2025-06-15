@@ -34,6 +34,7 @@
             this.btnAnswer = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.btnSharedAnswers = new System.Windows.Forms.Button();
+            this.btnTest = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -116,12 +117,23 @@
             this.btnSharedAnswers.UseVisualStyleBackColor = false;
             this.btnSharedAnswers.Click += new System.EventHandler(this.btnSharedAnswers_Click);
             // 
+            // btnTest
+            // 
+            this.btnTest.Location = new System.Drawing.Point(414, 21);
+            this.btnTest.Name = "btnTest";
+            this.btnTest.Size = new System.Drawing.Size(75, 23);
+            this.btnTest.TabIndex = 7;
+            this.btnTest.Text = "Test";
+            this.btnTest.UseVisualStyleBackColor = true;
+            this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(10)))), ((int)(((byte)(10)))), ((int)(((byte)(16)))));
             this.ClientSize = new System.Drawing.Size(501, 309);
+            this.Controls.Add(this.btnTest);
             this.Controls.Add(this.btnSharedAnswers);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnAnswer);
@@ -145,6 +157,7 @@
         private System.Windows.Forms.Button btnAnswer;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button btnSharedAnswers;
+        private System.Windows.Forms.Button btnTest;
     }
 }
 

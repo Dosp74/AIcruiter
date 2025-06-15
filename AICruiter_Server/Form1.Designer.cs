@@ -115,8 +115,9 @@
             this.btnCommunity.Name = "btnCommunity";
             this.btnCommunity.Size = new System.Drawing.Size(112, 105);
             this.btnCommunity.TabIndex = 2;
-            this.btnCommunity.Text = "커뮤니티";
+            this.btnCommunity.Text = "커뮤니티\r\n초기화";
             this.btnCommunity.UseVisualStyleBackColor = false;
+            this.btnCommunity.Click += new System.EventHandler(this.btnCommunity_Click);
             // 
             // Server
             // 

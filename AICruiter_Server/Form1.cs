@@ -369,5 +369,20 @@ namespace AICruiter_Server
             btnCommunity.FlatStyle = FlatStyle.Flat;
             btnCommunity.FlatAppearance.BorderSize = 0;
         }
+
+        private void DeleteAllSharedAnswers()
+        {
+            using (var db = new AppDbContext())
+            {
+                db.SharedAnswers.RemoveRange(db.SharedAnswers);
+                db.SaveChanges();
+            }
+            MessageBox.Show("공유된 답변이 모두 삭제되었습니다.");
+        }
+
+        private void btnCommunity_Click(object sender, EventArgs e)
+        {
+            DeleteAllSharedAnswers();
+        }
     }
 }

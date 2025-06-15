@@ -137,6 +137,7 @@ namespace AIcruiter
 
             using (var db = new AppDbContext())
             {
+                db.Database.EnsureCreated();
                 db.Database.Migrate();
 
                 // DB에 질문이 없을 경우 txt 파일에서 초기 로딩
@@ -1070,6 +1071,70 @@ namespace AIcruiter
             sharedForm.Controls.Add(answerListBox);
             sharedForm.Controls.Add(btnView);
             sharedForm.ShowDialog();
+        }
+
+        private async void TestSharedAnswers()
+        {
+            var random = new Random();
+            List<Question> questions;
+
+            using (var db = new AppDbContext())
+            {
+                questions = db.Questions.ToList();
+
+                if (questions.Count == 0)
+                {
+                    MessageBox.Show("질문이 없습니다.");
+                    return;
+                }
+            }
+
+            string[] sampleAnswers =
+            {
+                "자료구조는 데이터를 효율적으로 저장하는 방식입니다.",
+                "운영체제는 하드웨어 자원을 관리하고 사용자와 소통하는 소프트웨어입니다.",
+                "책임감은 맡은 일을 끝까지 수행하는 자세입니다.",
+                "퀵 정렬은 평균 시간 복잡도가 O(n log n)입니다.",
+                "협업 능력은 팀원들과의 커뮤니케이션과 조율 능력을 의미합니다."
+            };
+
+            for (int i = 0; i < 10; i++)
+            {
+                var q = questions[random.Next(questions.Count)];
+                string userId = $"testuser_{random.Next(1000, 9999)}";
+                var answer = sampleAnswers[random.Next(sampleAnswers.Length)];
+                int score = random.Next(60, 100);
+                string submittedAt = DateTime.Now.AddMinutes(-random.Next(1000)).ToString("yyyy-MM-dd HH:mm");
+
+                string shareMessage =
+                    $"sharing\n" +
+                    $"QuestionId: {q.Id}\n" +
+                    $"UserId: {userId}\n" +
+                    $"Score: {score}\n" +
+                    $"Answer: {answer}\n" +
+                    $"SubmittedAt: {submittedAt}\n" +
+                    $"[END]";
+
+            try
+            {
+                Connect();
+                await Send(shareMessage);
+                string response = await Receive(cancellationtoken1);
+                Disconnect();
+            }
+            catch
+            {
+                MessageBox.Show("테스트 데이터 전송 중 오류 발생", "실패");
+                return;
+            }
+}
+
+            MessageBox.Show($"테스트 데이터 전송 완료", "성공");
+        }
+
+        private void btnTest_Click(object sender, EventArgs e)
+        {
+            TestSharedAnswers();
         }
     }
 }
