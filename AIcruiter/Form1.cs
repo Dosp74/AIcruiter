@@ -139,47 +139,46 @@ namespace AIcruiter
             {
                 db.Database.Migrate();
 
-                // DB에 질문이 없을 경우 txt 파일에서 초기 로딩
-                if (!db.Questions.Any())
+                // 파일→카테고리 매핑
+                var files = new Dictionary<string, string>
                 {
-                    //.txt파일 위치는 \AIcruiter\bin\Debug 폴더
-                    var files = new Dictionary<string, string>
-                    {
-                        // key는 파일 이름, value는 카테고리로, 각 파일이 어떤 카테고리에 속하는지를 매핑
-                        { "DataStructure.txt", "DataStructure" },
-                        { "OS.txt", "OS" },
-                        { "Character.txt", "Character" },
-                    };
+                    { "DataStructure.txt", "DataStructure" },
+                    { "OS.txt",            "OS"            },
+                    { "Network.txt",       "Network"       },
+                    { "DataBase.txt",      "Database"      },
+                    { "Character.txt",     "Character"     },
+                };
 
-                    foreach (var kvp in files)
-                    {
-                        string path = kvp.Key;
-                        string category = kvp.Value;
+                bool anyNew = false;
+                foreach (var kvp in files)
+                {
+                    string file = kvp.Key;
+                    string category = kvp.Value;
 
-                        if (File.Exists(path))
+                    // 이 카테고리는 이미 로드되었으면 건너뛰기
+                    if (db.Questions.Any(q => q.Category == category))
+                        continue;
+
+                    string path = Path.Combine(AppContext.BaseDirectory, file);
+                    if (!File.Exists(path))
+                        continue;
+
+                    foreach (var line in File.ReadAllLines(path))
+                    {
+                        var cols = line.Split('/');
+                        db.Questions.Add(new Question
                         {
-                            // 줄 단위로 하여 질문을 리스트에 추가
-                            foreach (var line in File.ReadAllLines(path))
-                            {
-                                string[] columns = line.Split('/');
-
-                                int idx = int.Parse(columns[0]);
-                                string question = columns[1];
-                                string answer = columns.Length > 2 ? columns[2] : null; // 인성 질문은 정답 키워드가 없음
-
-                                db.Questions.Add(new Question
-                                {
-                                    Id = idx,
-                                    Text = question,
-                                    Answer = answer,
-                                    Category = category
-                                });
-                            }
-                        }
+                            Id = int.Parse(cols[0]),
+                            Text = cols[1],
+                            Answer = cols.Length > 2 ? cols[2] : null,
+                            Category = category
+                        });
                     }
-
-                    db.SaveChanges();
+                    anyNew = true;
                 }
+
+                if (anyNew)
+                    db.SaveChanges();
             }
         }
 
@@ -574,7 +573,7 @@ namespace AIcruiter
             {
                 Form selectionForm = new Form();
                 selectionForm.Text = "답변 선택";
-                selectionForm.Size = new Size(450, 630);
+                selectionForm.Size = new Size(450, 800);//높이를 800으로 늘림
                 selectionForm.BackColor = Color.FromArgb(27, 28, 34);
                 selectionForm.StartPosition = FormStartPosition.CenterParent;
 
@@ -621,17 +620,43 @@ namespace AIcruiter
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
+                // 네트워크 (추가)
+                Label lblNet = new Label()
+                {
+                    Text = "네트워크",
+                    Location = new Point(10, 530),
+                    Size = new Size(360, 20),
+                    ForeColor = Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
+                };
+
+                // 데이터베이스 (추가)
+                Label lblDB = new Label()
+                {
+                    Text = "데이터베이스",
+                    Location = new Point(10, 675),
+                    Size = new Size(360, 20),
+                    ForeColor = Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
+                };
+
+
                 // 각 카테고리별 ListBox 추가
                 ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 90) };
                 ListBox OSListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 250) };
                 ListBox characterInterviewListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 410) };
+                //네트워크, db 추가
+                ListBox networkListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 550) };
+                ListBox databaseListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 690) };
 
                 // 각 카테고리별 데이터 준비
                 Dictionary<ListBox, List<int>> listMap = new Dictionary<ListBox, List<int>>
                 {
                     { dataStructureListBox, new List<int>() },
                     { OSListBox, new List<int>() },
-                    { characterInterviewListBox, new List<int>() }
+                    { characterInterviewListBox, new List<int>() },
+                    { networkListBox, new List<int>() },  // ← 추가
+                    { databaseListBox,new List<int>() }   // ← 추가
                 };
 
                 // DB에서 답변이 존재하는 질문만 분류하여 삽입
@@ -663,6 +688,16 @@ namespace AIcruiter
                         characterInterviewListBox.Items.Add(display);
                         listMap[characterInterviewListBox].Add(q.Id);
                     }
+                    else if (q.Category == "Network")
+                    {
+                        networkListBox.Items.Add(display);
+                        listMap[networkListBox].Add(q.Id);
+                    }
+                    else if (q.Category == "Database")
+                    {
+                        databaseListBox.Items.Add(display);
+                        listMap[databaseListBox].Add(q.Id);
+                    }
                 }
 
                 // 검색 기능 구현
@@ -677,6 +712,8 @@ namespace AIcruiter
                     listMap[dataStructureListBox].Clear();
                     listMap[OSListBox].Clear();
                     listMap[characterInterviewListBox].Clear();
+                    listMap[networkListBox].Clear();
+                    listMap[databaseListBox].Clear();
 
                     foreach (var q in allQuestions)
                     {
@@ -700,6 +737,16 @@ namespace AIcruiter
                             characterInterviewListBox.Items.Add(display);
                             listMap[characterInterviewListBox].Add(q.Id);
                         }
+                        else if (q.Category == "Network")
+                        {
+                            networkListBox.Items.Add(display);
+                            listMap[networkListBox].Add(q.Id);
+                        }
+                        else if (q.Category == "Database")
+                        {
+                            databaseListBox.Items.Add(display);
+                            listMap[databaseListBox].Add(q.Id);
+                        }
                     }
                 };
 
@@ -716,12 +763,15 @@ namespace AIcruiter
                 dataStructureListBox.SelectedIndexChanged += (s, ev) => ClearOthers(dataStructureListBox);
                 OSListBox.SelectedIndexChanged += (s, ev) => ClearOthers(OSListBox);
                 characterInterviewListBox.SelectedIndexChanged += (s, ev) => ClearOthers(characterInterviewListBox);
+                networkListBox.SelectedIndexChanged += (s, ev) => ClearOthers(networkListBox);
+                databaseListBox.SelectedIndexChanged += (s, ev) => ClearOthers(databaseListBox);
+
 
                 // 보기 버튼 추가
                 Button btnOpen = new Button()
                 {
                     Text = "보기",
-                    Location = new Point(330, 540),  // Y 값 조정
+                    Location = new Point(330, 830),  // Y 값 조정
                     Size = new Size(80, 30),
                     ForeColor = System.Drawing.Color.Black,
                     BackColor = Color.White,
@@ -808,7 +858,13 @@ namespace AIcruiter
                 selectionForm.Controls.Add(dataStructureListBox);
                 selectionForm.Controls.Add(OSListBox);
                 selectionForm.Controls.Add(characterInterviewListBox);
+                selectionForm.Controls.Add(lblNet);
+                selectionForm.Controls.Add(networkListBox);
+                selectionForm.Controls.Add(lblDB);
+                selectionForm.Controls.Add(databaseListBox);
+
                 selectionForm.Controls.Add(btnOpen);
+
 
                 selectionForm.ShowDialog();
             }
@@ -820,7 +876,7 @@ namespace AIcruiter
             {
                 Form answerForm = new Form();
                 answerForm.Text = "정답 확인";
-                answerForm.Size = new Size(450, 600);
+                answerForm.Size = new Size(450, 700);
                 answerForm.StartPosition = FormStartPosition.CenterParent;
                 answerForm.BackColor = Color.FromArgb(27, 28, 34);
 
@@ -859,21 +915,73 @@ namespace AIcruiter
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
+                Label lblNetwork = new Label() 
+                { 
+                    Text = "네트워크", 
+                    Location = new Point(10, 375), 
+                    Size = new Size(360, 20),
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
+                };
+               
+                Label lblDatabase = new Label() 
+                { 
+                    Text = "데이터베이스",
+                    Location = new Point(10, 525),
+                    ForeColor = System.Drawing.Color.White,
+                    Font = new Font("맑은 고딕", 11, FontStyle.Bold)
+                };
+                
+
+
                 // 각 카테고리별 ListBox 추가
                 ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 90), SelectionMode = SelectionMode.One };
                 ListBox operatingSystemListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 260), SelectionMode = SelectionMode.One };
+                ListBox networkListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 400), SelectionMode = SelectionMode.One };
+                ListBox databaseListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 550), SelectionMode = SelectionMode.One };
 
                 // 카테고리별 데이터
                 var dsQuestions = db.Questions.Where(q => q.Category == "DataStructure").ToList();
                 var osQuestions = db.Questions.Where(q => q.Category == "OS").ToList();
+                var networkQuestions = db.Questions.Where(q => q.Category == "Network").ToList();
+                var dbQuestions = db.Questions.Where(q => q.Category == "Database").ToList();
 
                 foreach (var q in dsQuestions)
                     dataStructureListBox.Items.Add($"{q.Id}. {q.Text}");
                 foreach (var q in osQuestions)
                     operatingSystemListBox.Items.Add($"{q.Id}. {q.Text}");
+                foreach (var q in networkQuestions) 
+                    networkListBox.Items.Add($"{q.Id}. {q.Text}");
+                foreach (var q in dbQuestions) 
+                    databaseListBox.Items.Add($"{q.Id}. {q.Text}");
 
-                dataStructureListBox.SelectedIndexChanged += (s, ev) => operatingSystemListBox.ClearSelected();
-                operatingSystemListBox.SelectedIndexChanged += (s, ev) => dataStructureListBox.ClearSelected();
+                dataStructureListBox.SelectedIndexChanged += (s, ev) =>
+                {
+                    operatingSystemListBox.ClearSelected();
+                    networkListBox.ClearSelected();
+                    databaseListBox.ClearSelected();
+                };
+
+                operatingSystemListBox.SelectedIndexChanged += (s, ev) =>
+                {
+                    operatingSystemListBox.ClearSelected();
+                    networkListBox.ClearSelected();
+                    databaseListBox.ClearSelected();
+                };
+
+                networkListBox.SelectedIndexChanged += (s, ev) =>
+                {
+                    operatingSystemListBox.ClearSelected();
+                    dataStructureListBox.ClearSelected();
+                    databaseListBox.ClearSelected();
+                };
+                databaseListBox.SelectedIndexChanged += (s, ev) =>
+                {
+                    operatingSystemListBox.ClearSelected();
+                    dataStructureListBox.ClearSelected();
+                    networkListBox.ClearSelected();
+                };
+
 
                 // 검색 기능 구현
                 searchBox.TextChanged += (s, ev) =>
@@ -883,6 +991,8 @@ namespace AIcruiter
                     // 각 ListBox의 항목을 초기화하고 필터링된 항목만 추가
                     dataStructureListBox.Items.Clear();
                     operatingSystemListBox.Items.Clear();
+                    networkListBox.Items.Clear();
+                    databaseListBox.Items.Clear();
 
                     // 자료구조 질문 검색
                     foreach (var q in dsQuestions)
@@ -893,13 +1003,22 @@ namespace AIcruiter
                     foreach (var q in osQuestions)
                         if (q.Text.ToLower().Contains(search))
                             operatingSystemListBox.Items.Add($"{q.Id}. {q.Text}");
+
+                    //네트워크 질문 검색
+                    foreach (var q in osQuestions)
+                        if (q.Text.ToLower().Contains(search))
+                            networkListBox.Items.Add($"{q.Id}. {q.Text}");
+                    //데이터베이스 질문 검색
+                    foreach (var q in osQuestions)
+                        if (q.Text.ToLower().Contains(search))
+                            databaseListBox.Items.Add($"{q.Id}. {q.Text}");
                 };
 
                 // 보기 버튼 추가
                 Button btnOpen = new Button()
                 {
                     Text = "보기",
-                    Location = new Point(330, 390),  // Y 값 조정
+                    Location = new Point(330, 670),  // Y 값 조정
                     Size = new Size(80, 30),
                     Font = new Font("맑은 고딕", 10, FontStyle.Bold),
                     BackColor = Color.White
@@ -916,6 +1035,10 @@ namespace AIcruiter
                         selected = dsQuestions[dataStructureListBox.SelectedIndex];
                     else if (operatingSystemListBox.SelectedIndex >= 0)
                         selected = osQuestions[operatingSystemListBox.SelectedIndex];
+                    else if (networkListBox.SelectedIndex >= 0) 
+                        selected = networkQuestions[networkListBox.SelectedIndex];
+                    else if (databaseListBox.SelectedIndex >= 0) 
+                        selected = dbQuestions[databaseListBox.SelectedIndex];
 
                     if (selected == null || string.IsNullOrWhiteSpace(selected.Answer))
                     {
@@ -959,8 +1082,14 @@ namespace AIcruiter
                 answerForm.Controls.Add(lblSearch);
                 answerForm.Controls.Add(lblDataStructure);
                 answerForm.Controls.Add(lblOperatingSystem);
+                answerForm.Controls.Add(lblNetwork);
+                answerForm.Controls.Add(lblDatabase);
+
                 answerForm.Controls.Add(dataStructureListBox);
                 answerForm.Controls.Add(operatingSystemListBox);
+                answerForm.Controls.Add(networkListBox);
+                answerForm.Controls.Add(databaseListBox);
+
                 answerForm.Controls.Add(btnOpen);
                 answerForm.ShowDialog();
             }
