@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using AICruiter_Server.Models;
 using System.Linq;
 using System.Drawing;
-using AIcruiter.Models;
 
 namespace AICruiter_Server
 {
@@ -149,7 +148,7 @@ namespace AICruiter_Server
 
                     using (var db = new AppDbContext())
                     {
-                        db.SharedAnswers.Add(new AICruiter_Server.Models.SharedAnswer
+                        db.SharedAnswers.Add(new SharedAnswer
                         {
                             QuestionId = questionId,
                             UserId = userId,
