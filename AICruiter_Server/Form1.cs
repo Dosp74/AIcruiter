@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using AICruiter_Server.Models;
 using System.Linq;
+using System.Drawing;
+using AIcruiter.Models;
 
 namespace AICruiter_Server
 {
@@ -147,7 +149,7 @@ namespace AICruiter_Server
 
                     using (var db = new AppDbContext())
                     {
-                        db.SharedAnswers.Add(new SharedAnswer
+                        db.SharedAnswers.Add(new AICruiter_Server.Models.SharedAnswer
                         {
                             QuestionId = questionId,
                             UserId = userId,
@@ -369,20 +371,117 @@ namespace AICruiter_Server
             btnCommunity.FlatStyle = FlatStyle.Flat;
             btnCommunity.FlatAppearance.BorderSize = 0;
         }
+        class ListItemWithId
+        {
+            public string DisplayText { get; }
+            public int Id { get; }
+            public string AnswerContent { get; }
 
-        private void DeleteAllSharedAnswers()
+            public ListItemWithId(string displayText, int id, string answerContent)
+            {
+                DisplayText = displayText;
+                Id = id;
+                AnswerContent = answerContent;
+            }
+
+            public override string ToString()
+            {
+                return DisplayText;
+            }
+        }
+
+        private void ManageSharedAnswers()
         {
             using (var db = new AppDbContext())
             {
-                db.SharedAnswers.RemoveRange(db.SharedAnswers);
-                db.SaveChanges();
+                Form sharedForm = new Form
+                {
+                    Text = "공유 답변 관리",
+                    Size = new Size(600, 550),
+                    BackColor = Color.FromArgb(27, 28, 34),
+                    StartPosition = FormStartPosition.CenterParent
+                };
+
+                ListBox listBox = new ListBox
+                {
+                    Size = new Size(550, 300),
+                    Location = new Point(20, 20),
+                    Font = new Font("맑은 고딕", 10),
+                    BackColor = Color.White,
+                    ForeColor = Color.Black
+                };
+
+                // 질문 내용 표시용 텍스트박스
+                TextBox answerBox = new TextBox
+                {
+                    Location = new Point(20, 330),
+                    Size = new Size(550, 80),
+                    Multiline = true,
+                    ReadOnly = true,
+                    BackColor = Color.White,
+                    Font = new Font("맑은 고딕", 10)
+                };
+
+                Button btnDelete = new Button
+                {
+                    Text = "삭제",
+                    Location = new Point(460, 430),
+                    Size = new Size(100, 40),
+                    Font = new Font("맑은 고딕", 10, FontStyle.Bold),
+                    BackColor = Color.White,
+                    FlatStyle = FlatStyle.Flat
+                };
+                btnDelete.FlatAppearance.BorderSize = 0;
+
+                // 데이터 로드
+                var sharedAnswers = db.SharedAnswers
+                                      .OrderByDescending(a => a.SubmittedAt)
+                                      .ToList();
+
+                foreach (var answer in sharedAnswers)
+                {
+                    string display = $"[{answer.Id}] QID:{answer.QuestionId} / {answer.UserId} / {answer.Score}점 / {answer.SubmittedAt:yyyy-MM-dd}";
+                    listBox.Items.Add(new ListItemWithId(display, answer.Id, answer.AnswerContent ?? "(답변 없음)"));
+                }
+
+                // 항목 클릭 시 질문 텍스트 표시
+                listBox.SelectedIndexChanged += (s, ev) =>
+                {
+                    if (listBox.SelectedItem is ListItemWithId selected)
+                        answerBox.Text = selected.AnswerContent;
+                };
+
+                // 삭제 버튼 클릭
+                btnDelete.Click += (s, ev) =>
+                {
+                    if (listBox.SelectedItem is ListItemWithId selected)
+                    {
+                        var confirm = MessageBox.Show("정말 삭제하시겠습니까?", "확인", MessageBoxButtons.YesNo);
+                        if (confirm == DialogResult.Yes)
+                        {
+                            var target = db.SharedAnswers.Find(selected.Id);
+                            if (target != null)
+                            {
+                                db.SharedAnswers.Remove(target);
+                                db.SaveChanges();
+                                listBox.Items.Remove(selected);
+                                answerBox.Clear();
+                                MessageBox.Show("삭제 완료");
+                            }
+                        }
+                    }
+                };
+
+                sharedForm.Controls.Add(listBox);
+                sharedForm.Controls.Add(answerBox);
+                sharedForm.Controls.Add(btnDelete);
+                sharedForm.ShowDialog();
             }
-            MessageBox.Show("공유된 답변이 모두 삭제되었습니다.");
         }
 
         private void btnCommunity_Click(object sender, EventArgs e)
         {
-            DeleteAllSharedAnswers();
+            ManageSharedAnswers();
         }
     }
 }

@@ -456,7 +456,8 @@ namespace AIcruiter
                     Form resultForm = new Form()
                     {
                         Text = "채점 결과",
-                        Size = new Size(400, 500),
+                        Size = new Size(440, 540),
+                        BackColor = Color.FromArgb(27, 28, 34),
                         StartPosition = FormStartPosition.CenterParent
                     };
 
@@ -465,33 +466,35 @@ namespace AIcruiter
                     {
                         Text = $"{score}점 {emoji}",
                         Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                        ForeColor = Color.White,
                         AutoSize = true,
                         Location = new Point(30, 30)
                     };
                     resultForm.Controls.Add(resultLabel);
 
-                    // 상세 피드백
-                    Button detailButton = new Button()
+                    TextBox feedbackBox = new TextBox()
                     {
-                        Text = "상세 피드백 확인",
-                        Size = new Size(150, 30),
-                        Location = new Point(30, 110)
+                        Text = feedbackText,
+                        Size = new Size(360, 160),
+                        Location = new Point(30, 80),
+                        ScrollBars = ScrollBars.Vertical,
+                        Multiline = true,
+                        ReadOnly = true
                     };
-                    detailButton.Click += (s2, e2) =>
-                    {
-                        MessageBox.Show(feedbackText, "상세 피드백");
-                    };
-                    resultForm.Controls.Add(detailButton);
+                    resultForm.Controls.Add(feedbackBox);
 
                     // 항목별 점수를 차트로 시각화
                     if (accuracy > 0 || logic > 0 || clarity > 0)
                     {
                         Chart chart = new Chart()
                         {
-                            Size = new Size(300, 200),
-                            Location = new Point(30, 160)
+                            Size = new Size(360, 200),
+                            Location = new Point(30, 270),
                         };
-                        chart.ChartAreas.Add(new ChartArea("ScoreArea"));
+
+                        ChartArea area = new ChartArea("ScoreArea");
+                        area.AxisY.Maximum = 100;
+                        chart.ChartAreas.Add(area);
 
                         Series series = new Series("항목별 점수")
                         {
@@ -510,9 +513,14 @@ namespace AIcruiter
                     Button btnShare = new Button()
                     {
                         Text = "답변 공유",
-                        Size = new Size(100, 30),
-                        Location = new Point(250, 110)
+                        Size = new Size(90, 30),
+                        Location = new Point(300, 30),
+                        ForeColor = System.Drawing.Color.Black,
+                        BackColor = Color.White,
+                        Font = new Font("맑은 고딕", 10, FontStyle.Bold)
                     };
+                    btnShare.FlatStyle = FlatStyle.Flat;
+                    btnShare.FlatAppearance.BorderSize = 0;
 
                     btnShare.Click += async (s3, e3) =>
                     {
@@ -543,6 +551,7 @@ namespace AIcruiter
                             await Send(shareMessage);
                             await Receive(cancellationtoken1);
                             Disconnect();
+                            MessageBox.Show("답변 공유 성공", "성공");
                         }
                         catch (Exception)
                         {
@@ -574,7 +583,7 @@ namespace AIcruiter
                 Form selectionForm = new Form();
                 selectionForm.Text = "답변 선택";
                 selectionForm.AutoScroll = true;
-                selectionForm.Size = new Size(450, 860);//높이를 800으로 늘림
+                selectionForm.Size = new Size(450, 800);
                 selectionForm.BackColor = Color.FromArgb(27, 28, 34);
                 selectionForm.StartPosition = FormStartPosition.CenterParent;
 
@@ -597,7 +606,7 @@ namespace AIcruiter
                 Label lblDataStructure = new Label()
                 {
                     Text = "자료구조",
-                    Location = new Point(10, 60),
+                    Location = new Point(10, 50),
                     Size = new Size(360, 20),
                     ForeColor = System.Drawing.Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -606,7 +615,7 @@ namespace AIcruiter
                 Label lblOS = new Label()
                 {
                     Text = "운영체제",
-                    Location = new Point(10, 220),
+                    Location = new Point(10, 180),
                     Size = new Size(360, 20),
                     ForeColor = System.Drawing.Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -615,7 +624,7 @@ namespace AIcruiter
                 Label lblCharacterInterview = new Label()
                 {
                     Text = "인성",
-                    Location = new Point(10, 380),
+                    Location = new Point(10, 310),
                     Size = new Size(360, 20),
                     ForeColor = System.Drawing.Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -625,7 +634,7 @@ namespace AIcruiter
                 Label lblNet = new Label()
                 {
                     Text = "네트워크",
-                    Location = new Point(10, 530),
+                    Location = new Point(10, 440),
                     Size = new Size(360, 20),
                     ForeColor = Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -635,20 +644,25 @@ namespace AIcruiter
                 Label lblDB = new Label()
                 {
                     Text = "데이터베이스",
-                    Location = new Point(10, 665),
+                    Location = new Point(10, 570),
                     Size = new Size(360, 20),
                     ForeColor = Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
 
-
                 // 각 카테고리별 ListBox 추가
-                ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 90) };
-                ListBox OSListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 250) };
-                ListBox characterInterviewListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 410) };
+                ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 80) };
+                ListBox OSListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 210) };
+                ListBox characterInterviewListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 340) };
                 //네트워크, db 추가
-                ListBox networkListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 550) };
-                ListBox databaseListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 690) };
+                ListBox networkListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 470) };
+                ListBox databaseListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 600) };
+
+                dataStructureListBox.IntegralHeight = false;
+                OSListBox.IntegralHeight = false;
+                networkListBox.IntegralHeight = false;
+                databaseListBox.IntegralHeight = false;
+                characterInterviewListBox.IntegralHeight = false;
 
                 // 각 카테고리별 데이터 준비
                 Dictionary<ListBox, List<int>> listMap = new Dictionary<ListBox, List<int>>
@@ -710,6 +724,9 @@ namespace AIcruiter
                     dataStructureListBox.Items.Clear();
                     OSListBox.Items.Clear();
                     characterInterviewListBox.Items.Clear();
+                    networkListBox.Items.Clear();
+                    databaseListBox.Items.Clear();
+
                     listMap[dataStructureListBox].Clear();
                     listMap[OSListBox].Clear();
                     listMap[characterInterviewListBox].Clear();
@@ -754,6 +771,8 @@ namespace AIcruiter
                 // 리스트 간 중복 선택 방지
                 void ClearOthers(ListBox selected)
                 {
+                    if (selected.SelectedIndex < 0) return;
+
                     foreach (var list in listMap.Keys)
                     {
                         if (list != selected)
@@ -772,7 +791,7 @@ namespace AIcruiter
                 Button btnOpen = new Button()
                 {
                     Text = "보기",
-                    Location = new Point(330, 830),  // Y 값 조정
+                    Location = new Point(330, 710),  // Y 값 조정
                     Size = new Size(80, 30),
                     ForeColor = System.Drawing.Color.Black,
                     BackColor = Color.White,
@@ -863,9 +882,7 @@ namespace AIcruiter
                 selectionForm.Controls.Add(networkListBox);
                 selectionForm.Controls.Add(lblDB);
                 selectionForm.Controls.Add(databaseListBox);
-
                 selectionForm.Controls.Add(btnOpen);
-
 
                 selectionForm.ShowDialog();
             }
@@ -878,7 +895,7 @@ namespace AIcruiter
                 Form answerForm = new Form();
                 answerForm.Text = "정답 확인";
                 answerForm.AutoScroll = true;
-                answerForm.Size = new Size(450, 700);
+                answerForm.Size = new Size(450, 660);
                 answerForm.StartPosition = FormStartPosition.CenterParent;
                 answerForm.BackColor = Color.FromArgb(27, 28, 34);
 
@@ -902,7 +919,7 @@ namespace AIcruiter
                 Label lblDataStructure = new Label()
                 {
                     Text = "자료구조",
-                    Location = new Point(10, 60),
+                    Location = new Point(10, 50),
                     Size = new Size(360, 20),
                     ForeColor = System.Drawing.Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -911,7 +928,7 @@ namespace AIcruiter
                 Label lblOperatingSystem = new Label()
                 {
                     Text = "운영체제",
-                    Location = new Point(10, 230),
+                    Location = new Point(10, 180),
                     Size = new Size(360, 20),
                     ForeColor = System.Drawing.Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -920,7 +937,7 @@ namespace AIcruiter
                 Label lblNetwork = new Label() 
                 { 
                     Text = "네트워크", 
-                    Location = new Point(10, 375), 
+                    Location = new Point(10, 310), 
                     Size = new Size(360, 20),
                     ForeColor = System.Drawing.Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -929,7 +946,7 @@ namespace AIcruiter
                 Label lblDatabase = new Label() 
                 { 
                     Text = "데이터베이스",
-                    Location = new Point(10, 525),
+                    Location = new Point(10, 440),
                     ForeColor = System.Drawing.Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
                 };
@@ -937,10 +954,10 @@ namespace AIcruiter
 
 
                 // 각 카테고리별 ListBox 추가
-                ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 90), SelectionMode = SelectionMode.One };
-                ListBox operatingSystemListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 260), SelectionMode = SelectionMode.One };
-                ListBox networkListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 400), SelectionMode = SelectionMode.One };
-                ListBox databaseListBox = new ListBox() { Size = new Size(400, 120), Location = new Point(10, 550), SelectionMode = SelectionMode.One };
+                ListBox dataStructureListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 80), SelectionMode = SelectionMode.One };
+                ListBox operatingSystemListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 210), SelectionMode = SelectionMode.One };
+                ListBox networkListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 340), SelectionMode = SelectionMode.One };
+                ListBox databaseListBox = new ListBox() { Size = new Size(400, 90), Location = new Point(10, 470), SelectionMode = SelectionMode.One };
 
                 // 카테고리별 데이터
                 var dsQuestions = db.Questions.Where(q => q.Category == "DataStructure").ToList();
@@ -959,31 +976,43 @@ namespace AIcruiter
 
                 dataStructureListBox.SelectedIndexChanged += (s, ev) =>
                 {
-                    operatingSystemListBox.ClearSelected();
-                    networkListBox.ClearSelected();
-                    databaseListBox.ClearSelected();
+                    if (dataStructureListBox.SelectedIndex >= 0)
+                    {
+                        operatingSystemListBox.SelectedIndex = -1;
+                        networkListBox.SelectedIndex = -1;
+                        databaseListBox.SelectedIndex = -1;
+                    }
                 };
 
                 operatingSystemListBox.SelectedIndexChanged += (s, ev) =>
                 {
-                    operatingSystemListBox.ClearSelected();
-                    networkListBox.ClearSelected();
-                    databaseListBox.ClearSelected();
+                    if (operatingSystemListBox.SelectedIndex >= 0)
+                    {
+                        dataStructureListBox.SelectedIndex = -1;
+                        networkListBox.SelectedIndex = -1;
+                        databaseListBox.SelectedIndex = -1;
+                    }
                 };
 
                 networkListBox.SelectedIndexChanged += (s, ev) =>
                 {
-                    operatingSystemListBox.ClearSelected();
-                    dataStructureListBox.ClearSelected();
-                    databaseListBox.ClearSelected();
-                };
-                databaseListBox.SelectedIndexChanged += (s, ev) =>
-                {
-                    operatingSystemListBox.ClearSelected();
-                    dataStructureListBox.ClearSelected();
-                    networkListBox.ClearSelected();
+                    if (networkListBox.SelectedIndex >= 0)
+                    {
+                        dataStructureListBox.SelectedIndex = -1;
+                        operatingSystemListBox.SelectedIndex = -1;
+                        databaseListBox.SelectedIndex = -1;
+                    }
                 };
 
+                databaseListBox.SelectedIndexChanged += (s, ev) =>
+                {
+                    if (databaseListBox.SelectedIndex >= 0)
+                    {
+                        dataStructureListBox.SelectedIndex = -1;
+                        operatingSystemListBox.SelectedIndex = -1;
+                        networkListBox.SelectedIndex = -1;
+                    }
+                };
 
                 // 검색 기능 구현
                 searchBox.TextChanged += (s, ev) =>
@@ -1007,11 +1036,11 @@ namespace AIcruiter
                             operatingSystemListBox.Items.Add($"{q.Id}. {q.Text}");
 
                     //네트워크 질문 검색
-                    foreach (var q in osQuestions)
+                    foreach (var q in networkQuestions)
                         if (q.Text.ToLower().Contains(search))
                             networkListBox.Items.Add($"{q.Id}. {q.Text}");
                     //데이터베이스 질문 검색
-                    foreach (var q in osQuestions)
+                    foreach (var q in dbQuestions)
                         if (q.Text.ToLower().Contains(search))
                             databaseListBox.Items.Add($"{q.Id}. {q.Text}");
                 };
@@ -1020,7 +1049,7 @@ namespace AIcruiter
                 Button btnOpen = new Button()
                 {
                     Text = "보기",
-                    Location = new Point(330, 670),  // Y 값 조정
+                    Location = new Point(330, 580),  // Y 값 조정
                     Size = new Size(80, 30),
                     Font = new Font("맑은 고딕", 10, FontStyle.Bold),
                     BackColor = Color.White
@@ -1131,14 +1160,25 @@ namespace AIcruiter
             Form sharedForm = new Form()
             {
                 Text = "공유 답변 확인",
-                Size = new Size(600, 500),
+                Size = new Size(500, 390),
+                BackColor = Color.FromArgb(27, 28, 34),
                 StartPosition = FormStartPosition.CenterParent
+            };
+
+            Label lblquestion = new Label()
+            {
+                Text = "질문",
+                Location = new Point(10, 10),
+                Size = new Size(360, 20),
+                ForeColor = System.Drawing.Color.White,
+                Font = new Font("맑은 고딕", 11, FontStyle.Bold)
             };
 
             ListBox questionListBox = new ListBox()
             {
-                Location = new Point(10, 10),
-                Size = new Size(550, 150)
+                Location = new Point(10, 40),
+                Size = new Size(450, 90),
+                IntegralHeight = false
             };
 
             Dictionary<int, List<SharedAnswer>> answerMap = new Dictionary<int, List<SharedAnswer>>();
@@ -1158,17 +1198,29 @@ namespace AIcruiter
                 }
             }
 
+            Label lblanswer = new Label()
+            {
+                Text = "사용자 / 점수 / 등록일",
+                Location = new Point(10, 150),
+                Size = new Size(360, 20),
+                ForeColor = System.Drawing.Color.White,
+                Font = new Font("맑은 고딕", 11, FontStyle.Bold)
+            };
+
             ListBox answerListBox = new ListBox()
             {
                 Location = new Point(10, 180),
-                Size = new Size(550, 200)
+                Size = new Size(450, 90),
+                IntegralHeight = false
             };
 
             Button btnView = new Button()
             {
                 Text = "보기",
-                Location = new Point(480, 390),
-                Size = new Size(80, 30)
+                Location = new Point(380, 300),
+                Size = new Size(80, 30),
+                Font = new Font("맑은 고딕", 10, FontStyle.Bold),
+                BackColor = Color.White
             };
 
             questionListBox.SelectedIndexChanged += (s, ev) =>
@@ -1197,6 +1249,8 @@ namespace AIcruiter
                 MessageBox.Show(answer.AnswerContent, $"공유 답변 - {answer.UserId}");
             };
 
+            sharedForm.Controls.Add(lblquestion);
+            sharedForm.Controls.Add(lblanswer);
             sharedForm.Controls.Add(questionListBox);
             sharedForm.Controls.Add(answerListBox);
             sharedForm.Controls.Add(btnView);
