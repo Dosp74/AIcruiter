@@ -573,7 +573,8 @@ namespace AIcruiter
             {
                 Form selectionForm = new Form();
                 selectionForm.Text = "답변 선택";
-                selectionForm.Size = new Size(450, 800);//높이를 800으로 늘림
+                selectionForm.AutoScroll = true;
+                selectionForm.Size = new Size(450, 860);//높이를 800으로 늘림
                 selectionForm.BackColor = Color.FromArgb(27, 28, 34);
                 selectionForm.StartPosition = FormStartPosition.CenterParent;
 
@@ -634,7 +635,7 @@ namespace AIcruiter
                 Label lblDB = new Label()
                 {
                     Text = "데이터베이스",
-                    Location = new Point(10, 675),
+                    Location = new Point(10, 665),
                     Size = new Size(360, 20),
                     ForeColor = Color.White,
                     Font = new Font("맑은 고딕", 11, FontStyle.Bold)
@@ -876,6 +877,7 @@ namespace AIcruiter
             {
                 Form answerForm = new Form();
                 answerForm.Text = "정답 확인";
+                answerForm.AutoScroll = true;
                 answerForm.Size = new Size(450, 700);
                 answerForm.StartPosition = FormStartPosition.CenterParent;
                 answerForm.BackColor = Color.FromArgb(27, 28, 34);
