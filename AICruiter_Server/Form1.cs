@@ -500,9 +500,10 @@ namespace AICruiter_Server
                         listBox.Items.Clear();
                         answerBox.Clear();
 
-                        foreach (var a in db.SharedAnswers.OrderByDescending(a => a.SubmittedAt))
+                        foreach (var answer in db.SharedAnswers.OrderByDescending(a => a.SubmittedAt))
                         {
-                            listBox.Items.Add($"[{a.Id}] QID:{a.QuestionId} / {a.UserId} / {a.Score}점 / {a.SubmittedAt:yyyy-MM-dd}");
+                            string display = $"[{answer.Id}] QID:{answer.QuestionId} / {answer.UserId} / {answer.Score}점 / {answer.SubmittedAt:yyyy-MM-dd}";
+                            listBox.Items.Add(new ListItemWithId(display, answer.Id, answer.AnswerContent ?? "(답변 없음)"));
                         }
 
                         MessageBox.Show("삭제 완료");
