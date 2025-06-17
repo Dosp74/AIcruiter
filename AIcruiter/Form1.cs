@@ -566,7 +566,7 @@ namespace AIcruiter
                     {
                         Disconnect();
                     };
-
+                    resultForm.Shown += (s2, e2) => resultLabel.Focus(); // 피드백 텍스트 박스 포커스 해제
                     resultForm.ShowDialog();
                 };
                 modalForm.Controls.Add(gradeButton);
@@ -1273,6 +1273,8 @@ namespace AIcruiter
                 }
             }
 
+            var selectedQuestions = questions.OrderBy(q => Guid.NewGuid()).Take(5).ToList();
+
             string[] sampleAnswers =
             {
                 "자료구조는 데이터를 효율적으로 저장하는 방식입니다.",
@@ -1282,9 +1284,11 @@ namespace AIcruiter
                 "협업 능력은 팀원들과의 커뮤니케이션과 조율 능력을 의미합니다."
             };
 
-            for (int i = 0; i < 10; i++)
+            int total = 20;
+
+            for (int i = 0; i < total; i++)
             {
-                var q = questions[random.Next(questions.Count)];
+                var q = selectedQuestions[i % selectedQuestions.Count];
                 string userId = $"testuser_{random.Next(1000, 9999)}";
                 var answer = sampleAnswers[random.Next(sampleAnswers.Length)];
                 int score = random.Next(60, 100);

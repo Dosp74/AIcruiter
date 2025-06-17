@@ -432,6 +432,17 @@ namespace AICruiter_Server
                 };
                 btnDelete.FlatAppearance.BorderSize = 0;
 
+                Button btnDeleteTest = new Button
+                {
+                    Text = "테스트 데이터 삭제",
+                    Location = new Point(300, 430),
+                    Size = new Size(150, 40),
+                    Font = new Font("맑은 고딕", 10, FontStyle.Bold),
+                    BackColor = Color.White,
+                    FlatStyle = FlatStyle.Flat
+                };
+                btnDeleteTest.FlatAppearance.BorderSize = 0;
+
                 // 데이터 로드
                 var sharedAnswers = db.SharedAnswers
                                       .OrderByDescending(a => a.SubmittedAt)
@@ -471,9 +482,37 @@ namespace AICruiter_Server
                     }
                 };
 
+                // 테스트 데이터 전체 삭제
+                btnDeleteTest.Click += (s, ev) =>
+                {
+                    var confirm = MessageBox.Show("테스트 데이터를 삭제하시겠습니까?", "확인", MessageBoxButtons.YesNo);
+                    if (confirm == DialogResult.Yes)
+                    {
+                        var targets = db.SharedAnswers.Where(a => a.UserId.StartsWith("test")).ToList();
+                        if (targets.Count == 0)
+                        {
+                            MessageBox.Show("삭제할 테스트 데이터가 없습니다.");
+                            return;
+                        }
+
+                        db.SharedAnswers.RemoveRange(targets);
+                        db.SaveChanges();
+                        listBox.Items.Clear();
+                        answerBox.Clear();
+
+                        foreach (var a in db.SharedAnswers.OrderByDescending(a => a.SubmittedAt))
+                        {
+                            listBox.Items.Add($"[{a.Id}] QID:{a.QuestionId} / {a.UserId} / {a.Score}점 / {a.SubmittedAt:yyyy-MM-dd}");
+                        }
+
+                        MessageBox.Show("삭제 완료");
+                    }
+                };
+
                 sharedForm.Controls.Add(listBox);
                 sharedForm.Controls.Add(answerBox);
                 sharedForm.Controls.Add(btnDelete);
+                sharedForm.Controls.Add(btnDeleteTest);
                 sharedForm.ShowDialog();
             }
         }
